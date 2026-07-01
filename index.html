@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Fútbol Manager Test</title>
+  <style>
+    body {
+      background: #05080d;
+      color: white;
+      font-family: Arial, sans-serif;
+      padding: 30px;
+    }
+
+    button {
+      background: #27e36d;
+      border: 0;
+      padding: 14px 20px;
+      margin: 8px;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .section {
+      display: none;
+      margin-top: 20px;
+      padding: 20px;
+      background: #111b27;
+      border-radius: 16px;
+    }
+
+    .active {
+      display: block;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Fútbol 7 Manager</h1>
+
+  <button onclick="showSection('jugadores')">Base de jugadores</button>
+  <button onclick="showSection('partido')">Armar partido</button>
+  <button onclick="showSection('equipos')">Equipos</button>
+
+  <div id="jugadores" class="section active">
+    <h2>Base de jugadores</h2>
+    <p>Si ves esto, jugadores funciona.</p>
+  </div>
+
+  <div id="partido" class="section">
+    <h2>Armar partido</h2>
+    <p>Si ves esto, partido funciona.</p>
+  </div>
+
+  <div id="equipos" class="section">
+    <h2>Equipos</h2>
+    <p>Si ves esto, equipos funciona.</p>
+  </div>
+
+  <script>
+    alert("JS cargado correctamente");
+
+    function showSection(id) {
+      document.querySelectorAll(".section").forEach(function(section) {
+        section.classList.remove("active");
+      });
+
+      document.getElementById(id).classList.add("active");
+    }
+  </script>
+</body>
+</html>
