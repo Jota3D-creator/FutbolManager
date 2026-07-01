@@ -154,6 +154,14 @@
                   <option value="triangular">Triangular, 3 equipos</option>
                 </select>
               </label>
+              <label>Sistema táctico
+                <select id="matchFormation" disabled>
+                  <option value="auto">Auto, recomendar sistema</option>
+                  <option value="1-2-3-1">1-2-3-1, equilibrio</option>
+                  <option value="3-2-1">3-2-1, defensa y contra</option>
+                  <option value="1-2-2-2">1-2-2-2, presión alta</option>
+                </select>
+              </label>
               <label>Día
                 <input id="matchDay" type="text" value="Miércoles" disabled />
               </label>
@@ -258,6 +266,16 @@
           <div class="panel small-summary triangular-only hidden"><span>Equipo C</span><strong id="teamCAvg">0 OVR</strong></div>
         </div>
 
+        <article class="panel tactical-panel" id="tacticalPanel">
+          <div>
+            <h3>Sistema táctico</h3>
+            <p id="formationRecommendation">La app recomienda una formación según los jugadores del partido.</p>
+          </div>
+          <div class="tactical-actions editor-only hidden">
+            <button class="ghost-btn" id="applyRecommendedFormationBtn">Usar recomendada</button>
+          </div>
+        </article>
+
         <div class="pitch-panel panel">
           <div class="team-tabs">
             <div id="teamALabel" class="shirt-tag yellow">Boca amarilla</div>
@@ -357,7 +375,7 @@
           <div class="modal-live-preview">
             <div class="modal-live-preview-head">
               <span>Vista previa de la tarjeta</span>
-              <small>Cambia en vivo con los sliders</small>
+              <small>Técnica, Pase, Tiro, Defensa, Físico y Visión</small>
             </div>
             <div id="modalPlayerCardPreview"></div>
           </div>

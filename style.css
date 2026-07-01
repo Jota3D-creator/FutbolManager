@@ -1185,3 +1185,110 @@ select option { background: #101926; }
     backdrop-filter: blur(10px);
   }
 }
+
+
+/* v17 tactical formations */
+.tactical-panel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  padding: 18px;
+  margin-bottom: 14px;
+}
+
+.tactical-panel h3 {
+  margin: 0 0 6px;
+}
+
+.tactical-panel p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.tactical-actions {
+  flex: 0 0 auto;
+}
+
+.pitch-player.role-defensa .name-tag {
+  border-color: rgba(255,83,83,.42);
+}
+
+.pitch-player.role-medio .name-tag {
+  border-color: rgba(76,168,255,.42);
+}
+
+.pitch-player.role-ataque .name-tag {
+  border-color: rgba(255,212,59,.42);
+}
+
+.pitch-player.role-arquero .name-tag {
+  border-color: rgba(255,255,255,.52);
+}
+
+.formation-pill {
+  display: inline-block;
+  margin-right: 8px;
+  margin-bottom: 6px;
+  padding: 5px 9px;
+  border: 1px solid rgba(53,232,117,.32);
+  border-radius: 999px;
+  background: rgba(53,232,117,.08);
+  color: var(--green);
+  font-weight: 900;
+}
+
+@media (max-width: 760px) {
+  .tactical-panel {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+
+/* v18: six-stat live card preview */
+.modal-live-preview {
+  margin: 14px 0 18px;
+  padding: 14px;
+  border: 1px solid rgba(53,232,117,.30);
+  border-radius: 18px;
+  background: rgba(53,232,117,.045);
+}
+
+#modalPlayerCardPreview {
+  display: grid;
+  grid-template-columns: minmax(220px, 320px);
+}
+
+#modalPlayerCardPreview .player-card {
+  width: 100%;
+  box-shadow: none;
+  background: rgba(7,13,22,.82);
+}
+
+#modalPlayerCardPreview .player-card:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+#modalPlayerCardPreview .stat-row {
+  display: grid;
+}
+
+.modal-live-preview-head span {
+  color: var(--green);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+}
+
+.modal-live-preview-head small {
+  color: var(--muted);
+}
+
+.calculated-summary {
+  border-color: rgba(53,232,117,.24);
+  background: rgba(53,232,117,.035);
+}

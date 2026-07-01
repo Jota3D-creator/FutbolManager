@@ -1,5 +1,5 @@
 var EDITOR_PASSWORD = "bosteros2026";
-var STORAGE_KEY = "bosteros_manager_data_v15_live_card_preview";
+var STORAGE_KEY = "bosteros_manager_data_v18_card_summary_6";
 
 var defaultPlayers = [
   {
@@ -466,7 +466,8 @@ var state = {
     teamAColor: "yellow",
     teamBColor: "blue",
     teamCColor: "white",
-    mode: "normal"
+    mode: "normal",
+    formation: "auto"
   }
 };
 
@@ -485,12 +486,12 @@ var summaryConfig = [
     ["calma", 0.10],
     ["juegoEquipo", 0.05]
   ]],
-  ["definicion", "Definición", "#ffd43b", [
+  ["tiro", "Tiro", "#ffd43b", [
     ["finishing", 0.45],
-    ["tiroLargo", 0.20],
-    ["calma", 0.15],
-    ["movimientoSinPelota", 0.15],
-    ["tecnicaBase", 0.05]
+    ["tiroLargo", 0.25],
+    ["calma", 0.12],
+    ["movimientoSinPelota", 0.12],
+    ["tecnicaBase", 0.06]
   ]],
   ["defensa", "Defensa", "#ff5353", [
     ["entrada", 0.30],
@@ -507,22 +508,26 @@ var summaryConfig = [
     ["fuerza", 0.10],
     ["intensidad", 0.10]
   ]],
-  ["inteligencia", "Inteligencia", "#32d4d9", [
-    ["anticipacion", 0.20],
+  ["vision", "Visión", "#32d4d9", [
+    ["visionJuego", 0.35],
     ["decisiones", 0.25],
-    ["visionJuego", 0.25],
-    ["movimientoSinPelota", 0.15],
+    ["anticipacion", 0.15],
     ["calma", 0.10],
-    ["disciplina", 0.05]
-  ]],
-  ["compromiso", "Compromiso", "#ff5bae", [
-    ["intensidad", 0.35],
-    ["disciplina", 0.20],
-    ["juegoEquipo", 0.20],
-    ["resistencia", 0.15],
-    ["calma", 0.10]
+    ["movimientoSinPelota", 0.10],
+    ["juegoEquipo", 0.05]
   ]]
 ];
+
+function summaryCardStats() {
+  return [
+    ["tecnica", "Técnica", "#35e875"],
+    ["pase", "Pase", "#4ca8ff"],
+    ["tiro", "Tiro", "#ffd43b"],
+    ["defensa", "Defensa", "#ff5353"],
+    ["fisico", "Físico", "#9c6bff"],
+    ["vision", "Visión", "#32d4d9"]
+  ];
+}
 
 var summaryStatKeys = summaryConfig.map(function(item) {
   return item[0];
@@ -578,19 +583,19 @@ var statConfig = statGroups.reduce(function(list, group) {
 }, []);
 
 var compareConfig = [
-  ["Ataque", ["tecnica", "pase", "definicion"]],
+  ["Ataque", ["tecnica", "pase", "tiro"]],
   ["Defensa", ["defensa"]],
   ["Físico", ["fisico"]],
-  ["Juego", ["pase", "inteligencia", "compromiso"]]
+  ["Juego", ["pase", "vision"]]
 ];
 
 var categoryConfig = [
   ["Técnica", ["tecnica"]],
-  ["Ataque", ["definicion"]],
+  ["Pase", ["pase"]],
+  ["Tiro", ["tiro"]],
   ["Defensa", ["defensa"]],
-  ["Juego", ["pase", "inteligencia"]],
   ["Físico", ["fisico"]],
-  ["Mental", ["inteligencia", "compromiso"]]
+  ["Visión", ["vision"]]
 ];
 
 var playersDirty = false;
@@ -625,8 +630,7 @@ function positionScore(indexes) {
 
   indexes.forEach(function(index) {
     var p = state.players[index];
-    var group = positionGroup(p.posicionNatural || "polivalente");
-    counts[group] += 1;
+    counts[playerLineRole(p)] += 1;
   });
 
   return counts;
@@ -637,20 +641,23 @@ function rolePenaltyForTeam(indexes, candidateIndex) {
   next.push(candidateIndex);
 
   var counts = positionScore(next);
+  var candidateRole = playerLineRole(state.players[candidateIndex]);
   var penalty = 0;
 
-  if (counts.defensa === 0) penalty += 10;
-  if (counts.medio === 0) penalty += 8;
-  if (counts.ataque === 0) penalty += 8;
+  if (counts.defensa === 0) penalty += 45;
+  if (counts.medio === 0) penalty += 30;
+  if (counts.ataque === 0) penalty += 30;
 
-  if (counts.defensa > 3) penalty += (counts.defensa - 3) * 3;
-  if (counts.ataque > 3) penalty += (counts.ataque - 3) * 3;
-  if (counts.arquero > 1) penalty += (counts.arquero - 1) * 8;
+  if (counts.defensa > 3) penalty += (counts.defensa - 3) * 18;
+  if (counts.medio > 3) penalty += (counts.medio - 3) * 10;
+  if (counts.ataque > 3) penalty += (counts.ataque - 3) * 18;
+  if (counts.arquero > 1) penalty += (counts.arquero - 1) * 35;
+
+  if (candidateRole === "defensa" && counts.defensa > 2) penalty += 14;
+  if (candidateRole === "ataque" && counts.ataque > 2) penalty += 14;
 
   return penalty;
 }
-
-
 
 function cloneDefaultPlayers() {
   var players = JSON.parse(JSON.stringify(defaultPlayers));
@@ -683,6 +690,7 @@ function init() {
       if (!state.teams.positions) state.teams.positions = {};
       if (!state.match.mode) state.match.mode = "normal";
       if (!state.match.teamCColor) state.match.teamCColor = "white";
+      if (!state.match.formation) state.match.formation = "auto";
     } catch (e) {
       state.players = cloneDefaultPlayers();
       state.teams = { a: [], b: [], c: [], positions: {} };
@@ -750,8 +758,8 @@ function applyDerivedSummary(p) {
 
 function inferNaturalPosition(p) {
   var def = Number(p.defensa || 50) + Number(p.marca || 50) + Number(p.entrada || 50);
-  var mid = Number(p.pase || 50) + Number(p.visionJuego || 50) + Number(p.decisiones || 50);
-  var att = Number(p.definicion || 50) + Number(p.regate || 50) + Number(p.tiroLargo || 50);
+  var mid = Number(p.pase || 50) + Number(p.vision || p.visionJuego || 50) + Number(p.decisiones || 50);
+  var att = Number(p.tiro || p.finishing || 50) + Number(p.regate || 50) + Number(p.tiroLargo || 50);
 
   if (def >= mid && def >= att) return "defensa";
   if (att >= def && att >= mid) return "delantero";
@@ -763,10 +771,10 @@ function normalizePlayers() {
     var base = {
       tecnica: p.tecnica || 50,
       pase: p.pase || 50,
-      definicion: p.definicion || 50,
+      tiro: p.tiro || p.definicion || 50,
       defensa: p.defensa || 50,
       fisico: p.fisico || 50,
-      inteligencia: p.inteligencia || 50,
+      vision: p.vision || p.inteligencia || 50,
       compromiso: p.compromiso || 50
     };
 
@@ -774,19 +782,19 @@ function normalizePlayers() {
       control: Math.round((base.tecnica + base.pase) / 2),
       tecnicaBase: base.tecnica,
       passing: base.pase,
-      finishing: base.definicion,
+      finishing: base.tiro,
       entrada: base.defensa,
       marca: base.defensa,
       regate: base.tecnica,
-      tiroLargo: Math.round((base.definicion + base.tecnica) / 2),
-      anticipacion: Math.round((base.defensa + base.inteligencia) / 2),
-      calma: base.inteligencia,
-      decisiones: Math.round((base.inteligencia + base.pase) / 2),
+      tiroLargo: Math.round((base.tiro + base.tecnica) / 2),
+      anticipacion: Math.round((base.defensa + base.vision) / 2),
+      calma: base.vision,
+      decisiones: Math.round((base.vision + base.pase) / 2),
       disciplina: Math.round((base.defensa + base.compromiso) / 2),
       intensidad: Math.round((base.fisico + base.compromiso) / 2),
       juegoEquipo: Math.round((base.pase + base.compromiso) / 2),
-      movimientoSinPelota: Math.round((base.inteligencia + base.fisico) / 2),
-      visionJuego: Math.round((base.inteligencia + base.pase) / 2),
+      movimientoSinPelota: Math.round((base.vision + base.fisico) / 2),
+      visionJuego: Math.round((base.vision + base.pase) / 2),
       aceleracion: base.fisico,
       agilidad: Math.round((base.fisico + base.tecnica) / 2),
       fuerza: Math.round((base.fisico + base.defensa) / 2),
@@ -803,7 +811,7 @@ function normalizePlayers() {
 
     if (!p.status) p.status = "base";
     if (!p.photo) p.photo = "";
-    if (!p.posicionNatural) p.posicionNatural = inferNaturalPosition(p);
+    if (!p.posicionNatural) p.posicionNatural = "polivalente";
 
     applyDerivedSummary(p);
     return p;
@@ -848,6 +856,7 @@ function bindEvents() {
   bindButtonIfExists("savePlayersBtn", savePlayersManually);
   bindButtonIfExists("regenerateFromPlayersBtn", regenerateFromPlayers);
   bindButtonIfExists("goTeamsFromPlayersBtn", function(){ showView("teams"); });
+  bindButtonIfExists("applyRecommendedFormationBtn", applyRecommendedFormation);
   document.getElementById("restoreDefaultPlayersBtn").addEventListener("click", restoreDefaultPlayers);
   document.getElementById("closePlayerModalBtn").addEventListener("click", closePlayerModal);
   document.getElementById("cancelPlayerBtn").addEventListener("click", closePlayerModal);
@@ -988,7 +997,7 @@ function renderEditorMode() {
     el.classList.toggle("hidden", !state.isEditor);
   });
 
-  ["matchMode", "matchDay", "matchArrival", "matchStart", "matchPlace", "matchMap", "matchCost", "teamAColor", "teamBColor", "teamCColor"].forEach(function(id) {
+  ["matchMode", "matchFormation", "matchDay", "matchArrival", "matchStart", "matchPlace", "matchMap", "matchCost", "teamAColor", "teamBColor", "teamCColor"].forEach(function(id) {
     var el = document.getElementById(id);
     if (el) el.disabled = !state.isEditor;
   });
@@ -1083,22 +1092,14 @@ function renderDashboard() {
 function playerCardHTML(p, i, editable) {
   applyDerivedSummary(p);
 
-  var summaryStats = [
-    ["tecnica", "Técnica", "#35e875"],
-    ["pase", "Pase", "#4ca8ff"],
-    ["definicion", "Def.", "#ffd43b"],
-    ["defensa", "Defensa", "#ff5353"],
-    ["fisico", "Físico", "#9c6bff"],
-    ["inteligencia", "Intel.", "#32d4d9"],
-    ["compromiso", "Comp.", "#ff5bae"]
-  ];
+  var summaryStats = summaryCardStats();
 
   var stats = summaryStats.map(function(s) {
     var key = s[0], label = s[1], color = s[2];
     return '<div class="stat-row"><span>' + label + '</span><div class="bar"><i style="--w:' + p[key] + '%;--c:' + color + '"></i></div><b>' + p[key] + '</b></div>';
   }).join("");
 
-  var positionText = positionLabel[p.posicionNatural] || "Polivalente";
+  var positionText = displayPositionLabel(p);
 
   var positionEditor = "";
   if (editable && state.isEditor) {
@@ -1137,22 +1138,14 @@ function playerCardHTML(p, i, editable) {
 function modalPlayerPreviewCardHTML(p) {
   applyDerivedSummary(p);
 
-  var summaryStats = [
-    ["tecnica", "Técnica", "#35e875"],
-    ["pase", "Pase", "#4ca8ff"],
-    ["definicion", "Def.", "#ffd43b"],
-    ["defensa", "Defensa", "#ff5353"],
-    ["fisico", "Físico", "#9c6bff"],
-    ["inteligencia", "Intel.", "#32d4d9"],
-    ["compromiso", "Comp.", "#ff5bae"]
-  ];
+  var summaryStats = summaryCardStats();
 
   var stats = summaryStats.map(function(s) {
     var key = s[0], label = s[1], color = s[2];
     return '<div class="stat-row"><span>' + label + '</span><div class="bar"><i style="--w:' + p[key] + '%;--c:' + color + '"></i></div><b>' + p[key] + '</b></div>';
   }).join("");
 
-  var positionText = positionLabel[p.posicionNatural] || "Polivalente";
+  var positionText = displayPositionLabel(p);
 
   return '<article class="player-card live-card">' +
     '<div class="player-top">' + avatar(p) +
@@ -1224,7 +1217,7 @@ function matchPlayerCardHTML(p, index, mode) {
     avatar(p) +
     '<div class="match-player-info">' +
       '<strong>' + p.name + '</strong>' +
-      '<small>' + overall(p) + ' OVR · ' + (positionLabel[p.posicionNatural] || "Polivalente") + '</small>' +
+      '<small>' + overall(p) + ' OVR · ' + displayPositionLabel(p) + '</small>' +
     '</div>' +
     '<button class="match-player-action ' + actionClass + '" ' + disabled + ' data-target-status="' + targetStatus + '" onclick="setPlayerMatchStatus(' + index + ', this.dataset.targetStatus)">' + actionLabel + '</button>' +
   '</div>';
@@ -1361,6 +1354,7 @@ function renderTriangularModeUI() {
 
 function renderMatchForm() {
   if (document.getElementById("matchMode")) document.getElementById("matchMode").value = state.match.mode || "normal";
+  if (document.getElementById("matchFormation")) document.getElementById("matchFormation").value = state.match.formation || "auto";
   document.getElementById("matchDay").value = state.match.day;
   document.getElementById("matchArrival").value = state.match.arrival;
   document.getElementById("matchStart").value = state.match.start;
@@ -1377,6 +1371,7 @@ function saveMatchFromForm() {
   if (!state.isEditor) return;
 
   state.match.mode = document.getElementById("matchMode") ? document.getElementById("matchMode").value || "normal" : "normal";
+  state.match.formation = document.getElementById("matchFormation") ? document.getElementById("matchFormation").value || "auto" : "auto";
   state.match.day = document.getElementById("matchDay").value;
   state.match.arrival = document.getElementById("matchArrival").value;
   state.match.start = document.getElementById("matchStart").value;
@@ -1435,8 +1430,8 @@ function renderCalculatedSummaryHTML(p) {
   var summary = calculateSummaryStats(p);
 
   return '<details class="stat-section calculated-summary" open>' +
-    '<summary>Resumen calculado</summary>' +
-    '<div class="summary-help">Estos valores no se editan directo. Se calculan a partir de los sliders técnicos, mentales y físicos.</div>' +
+    '<summary>Resumen calculado de tarjeta</summary>' +
+    '<div class="summary-help">Estos 6 valores alimentan la tarjeta. No se editan directo: cambian cuando movés los sliders finos.</div>' +
     '<div class="slider-list">' +
     summaryConfig.map(function(item) {
       var key = item[0];
@@ -1671,35 +1666,94 @@ function makeTeams(randomize) {
     return;
   }
 
-  confirmed.sort(function(a, b){
-    if (randomize) return Math.random() - 0.5;
-    return overall(b.player) - overall(a.player);
+  var buckets = {
+    arquero: [],
+    defensa: [],
+    medio: [],
+    ataque: []
+  };
+
+  confirmed.forEach(function(item) {
+    buckets[playerLineRole(item.player)].push(item);
+  });
+
+  Object.keys(buckets).forEach(function(role) {
+    buckets[role].sort(function(a, b) {
+      if (randomize) return Math.random() - 0.5;
+      return overall(b.player) - overall(a.player);
+    });
   });
 
   var teams = [[], [], []];
   var maxPerTeam = Math.ceil(confirmed.length / teamCount);
 
-  confirmed.forEach(function(item) {
+  function rawScore(team) {
+    return team.reduce(function(sum, index) {
+      return sum + overall(state.players[index]);
+    }, 0);
+  }
+
+  function chooseBestTeamFor(item) {
     var bestTeam = 0;
     var bestScore = Infinity;
+    var role = playerLineRole(item.player);
 
     for (var t = 0; t < teamCount; t++) {
       if (teams[t].length >= maxPerTeam) continue;
 
-      var rawScore = teams[t].reduce(function(sum, x) {
-        return sum + overall(state.players[x]);
-      }, 0);
+      var counts = positionScore(teams[t]);
+      var score = rawScore(teams[t]) + rolePenaltyForTeam(teams[t], item.index);
 
-      var optionScore = rawScore + overall(item.player) + rolePenaltyForTeam(teams[t], item.index);
+      score += counts[role] * 24;
+      score += teams[t].length * 8;
 
-      if (optionScore < bestScore) {
-        bestScore = optionScore;
+      if (randomize) score += Math.random() * 8;
+
+      if (score < bestScore) {
+        bestScore = score;
         bestTeam = t;
       }
     }
 
-    teams[bestTeam].push(item.index);
+    return bestTeam;
+  }
+
+  ["arquero", "defensa", "medio", "ataque"].forEach(function(role) {
+    buckets[role].forEach(function(item) {
+      var t = chooseBestTeamFor(item);
+      teams[t].push(item.index);
+    });
   });
+
+  for (var pass = 0; pass < 18; pass++) {
+    var avgs = teams.slice(0, teamCount).map(function(team) {
+      return team.length ? rawScore(team) / team.length : 0;
+    });
+
+    var maxTeam = avgs.indexOf(Math.max.apply(null, avgs));
+    var minTeam = avgs.indexOf(Math.min.apply(null, avgs));
+
+    if (Math.abs(avgs[maxTeam] - avgs[minTeam]) < 3) break;
+
+    var moved = false;
+
+    for (var i = 0; i < teams[maxTeam].length; i++) {
+      var candidate = teams[maxTeam][i];
+      var role = playerLineRole(state.players[candidate]);
+      var sourceCounts = positionScore(teams[maxTeam]);
+      var targetCounts = positionScore(teams[minTeam]);
+
+      if (sourceCounts[role] <= 1 && role !== "arquero") continue;
+      if (targetCounts[role] >= 3 && role !== "medio") continue;
+
+      teams[maxTeam].splice(i, 1);
+      teams[minTeam].push(candidate);
+      moved = true;
+      break;
+    }
+
+    if (!moved) break;
+  }
 
   var a = teams[0];
   var b = teams[1];
@@ -1711,7 +1765,6 @@ function makeTeams(randomize) {
   renderDashboard();
   showView("teams");
 }
-
 function resetTeams() {
   if (!state.isEditor) return;
   if (!confirm("¿Resetear equipos? Se borra la formación actual.")) return;
@@ -1725,36 +1778,107 @@ function resetTeams() {
 }
 
 function defaultPositionsForTeams(a, b, c) {
-  var positionsA = [[14,50], [24,28], [24,72], [36,36], [36,64], [30,50], [44,50], [18,38], [18,62], [42,24], [42,76]];
-  var positionsB = [[86,50], [76,28], [76,72], [64,36], [64,64], [70,50], [56,50], [82,38], [82,62], [58,24], [58,76]];
-  var positionsC = [[50,16], [38,28], [62,28], [44,42], [56,42], [50,56], [40,70], [60,70], [50,84], [34,56], [66,56]];
+  var positions = {};
+  var formation = activeFormationId();
 
-  if (isTriangular()) {
-    positionsA = [[16,18], [16,34], [16,50], [16,66], [16,82], [27,34], [27,50], [27,66], [27,18], [27,82]];
-    positionsB = [[50,18], [50,34], [50,50], [50,66], [50,82], [39,34], [39,50], [39,66], [61,34], [61,66]];
-    positionsC = [[84,18], [84,34], [84,50], [84,66], [84,82], [73,34], [73,50], [73,66], [73,18], [73,82]];
+  var normal = {
+    "1-2-3-1": {
+      left: {
+        arquero: [[11,50]],
+        defensa: [[25,35], [25,65], [22,50], [28,50]],
+        medio: [[40,25], [40,50], [40,75], [35,50]],
+        ataque: [[49,50], [47,35], [47,65], [44,50]]
+      },
+      right: {
+        arquero: [[89,50]],
+        defensa: [[75,35], [75,65], [78,50], [72,50]],
+        medio: [[60,25], [60,50], [60,75], [65,50]],
+        ataque: [[51,50], [53,35], [53,65], [56,50]]
+      }
+    },
+    "3-2-1": {
+      left: {
+        arquero: [[11,50]],
+        defensa: [[23,25], [23,50], [23,75], [18,50]],
+        medio: [[39,38], [39,62], [35,50], [43,50]],
+        ataque: [[49,50], [47,35], [47,65], [44,50]]
+      },
+      right: {
+        arquero: [[89,50]],
+        defensa: [[77,25], [77,50], [77,75], [82,50]],
+        medio: [[61,38], [61,62], [65,50], [57,50]],
+        ataque: [[51,50], [53,35], [53,65], [56,50]]
+      }
+    },
+    "1-2-2-2": {
+      left: {
+        arquero: [[11,50]],
+        defensa: [[25,36], [25,64], [22,50], [28,50]],
+        medio: [[39,38], [39,62], [35,50], [43,50]],
+        ataque: [[49,38], [49,62], [46,50], [47,25]]
+      },
+      right: {
+        arquero: [[89,50]],
+        defensa: [[75,36], [75,64], [78,50], [72,50]],
+        medio: [[61,38], [61,62], [65,50], [57,50]],
+        ataque: [[51,38], [51,62], [54,50], [53,25]]
+      }
+    }
+  };
+
+  var tri = {
+    left: {
+      arquero: [[7,50]],
+      defensa: [[16,28], [16,50], [16,72], [12,50]],
+      medio: [[26,35], [26,65], [24,50], [29,50]],
+      ataque: [[32,50], [31,30], [31,70], [29,50]]
+    },
+    center: {
+      arquero: [[50,88]],
+      defensa: [[40,70], [50,70], [60,70], [50,78]],
+      medio: [[42,50], [58,50], [50,54], [50,42]],
+      ataque: [[50,23], [42,30], [58,30], [50,34]]
+    },
+    right: {
+      arquero: [[93,50]],
+      defensa: [[84,28], [84,50], [84,72], [88,50]],
+      medio: [[74,35], [74,65], [76,50], [71,50]],
+      ataque: [[68,50], [69,30], [69,70], [71,50]]
+    }
+  };
+
+  function assignTeam(indexes, formationSide) {
+    var sorted = sortIndexesForFormation(indexes);
+    var usedByRole = { arquero: 0, defensa: 0, medio: 0, ataque: 0 };
+
+    sorted.forEach(function(index) {
+      var role = playerLineRole(state.players[index]);
+      var slotIndex = usedByRole[role] || 0;
+      var slotList = formationSide[role] || formationSide.medio;
+      var pos = slotList[slotIndex];
+
+      usedByRole[role] = slotIndex + 1;
+
+      if (!pos) {
+        pos = slotList[slotList.length - 1] || formationSide.medio[0];
+      }
+
+      positions[index] = { x: pos[0], y: pos[1] };
+    });
   }
 
-  var positions = {};
-
-  (a || []).forEach(function(index, i) {
-    var pos = positionsA[i] || [18 + (i % 3) * 7, 18 + Math.floor(i / 3) * 15];
-    positions[index] = { x: pos[0], y: pos[1] };
-  });
-
-  (b || []).forEach(function(index, i) {
-    var pos = positionsB[i] || [82 - (i % 3) * 7, 18 + Math.floor(i / 3) * 15];
-    positions[index] = { x: pos[0], y: pos[1] };
-  });
-
-  (c || []).forEach(function(index, i) {
-    var pos = positionsC[i] || [50 + ((i % 3) - 1) * 8, 18 + Math.floor(i / 3) * 15];
-    positions[index] = { x: pos[0], y: pos[1] };
-  });
+  if (isTriangular()) {
+    assignTeam(a || [], tri.left);
+    assignTeam(b || [], tri.center);
+    assignTeam(c || [], tri.right);
+  } else {
+    var normalFormation = normal[formation] || normal["1-2-3-1"];
+    assignTeam(a || [], normalFormation.left);
+    assignTeam(b || [], normalFormation.right);
+  }
 
   return positions;
 }
-
 function teamAverage(indexes) {
   if (!indexes.length) return 0;
   var total = indexes.reduce(function(sum, index){ return sum + overall(state.players[index]); }, 0);
@@ -1763,6 +1887,7 @@ function teamAverage(indexes) {
 
 function renderTeams() {
   renderTriangularModeUI();
+  renderTacticalRecommendation();
 
   var a = state.teams.a || [];
   var b = state.teams.b || [];
@@ -1908,7 +2033,9 @@ function pitchPlayerHTML(index, teamClass, draggable) {
   var pos = (state.teams.positions && state.teams.positions[index]) || { x: 50, y: 50 };
   var dragClass = draggable && state.isEditor ? " draggable" : "";
 
-  return '<div class="pitch-player ' + teamClass + dragClass + '" data-index="' + index + '" style="left:' + pos.x + '%; top:' + pos.y + '%">' +
+  var roleClass = "role-" + playerLineRole(p);
+
+  return '<div class="pitch-player ' + teamClass + " " + roleClass + dragClass + '" data-index="' + index + '" style="left:' + pos.x + '%; top:' + pos.y + '%">' +
     avatar(p) +
     '<div class="name-tag">' + p.name + '</div>' +
   '</div>';
@@ -1973,7 +2100,7 @@ function renderTeamList(id, indexes) {
 
   container.innerHTML = indexes.map(function(index) {
     var p = state.players[index];
-    return '<div class="team-line"><span>' + p.name + ' <small class="muted">· ' + (positionLabel[p.posicionNatural] || "Polivalente") + '</small></span><strong>' + overall(p) + '</strong></div>';
+    return '<div class="team-line"><span>' + p.name + ' <small class="muted">· ' + displayPositionLabel(p) + '</small></span><strong>' + overall(p) + '</strong></div>';
   }).join("") || '<p class="muted">Todavía no hay equipo generado.</p>';
 }
 
