@@ -11,14 +11,19 @@
     <aside class="sidebar">
       <div class="brand">
         <div class="brand-ball">⚽</div>
-        <div><h1>LOS BOSTEROS</h1><p>Fútbol 7 Manager</p></div>
+        <div>
+          <h1>LOS BOSTEROS</h1>
+          <p>Fútbol 7 Manager</p>
+        </div>
       </div>
+
       <nav class="nav">
         <button class="nav-btn active" data-view="dashboard">Dashboard</button>
         <button class="nav-btn" data-view="players">Jugadores</button>
         <button class="nav-btn" data-view="match">Partido</button>
         <button class="nav-btn" data-view="teams">Equipos</button>
       </nav>
+
       <div class="editor-box">
         <span id="editorStatus">Modo visitante</span>
         <small>Solo lectura</small>
@@ -29,7 +34,10 @@
 
     <main class="main">
       <header class="topbar">
-        <div><h2 id="viewTitle">Dashboard</h2><p id="viewSubtitle">Próximo partido, convocados y resumen general.</p></div>
+        <div>
+          <h2 id="viewTitle">Dashboard</h2>
+          <p id="viewSubtitle">Próximo partido, convocados y resumen general.</p>
+        </div>
         <button class="primary-btn editor-only hidden" id="openPlayerModalBtn">+ Nuevo jugador</button>
       </header>
 
@@ -38,23 +46,65 @@
           <article class="panel hero-card">
             <span class="kicker">Próximo partido</span>
             <h3 id="dashDate">Miércoles</h3>
-            <div class="time-row"><div><strong>22:00</strong><small>Llegada</small></div><div><strong>22:30</strong><small>Inicio</small></div></div>
+            <div class="time-row">
+              <div><strong>22:00</strong><small>Llegada</small></div>
+              <div><strong>22:30</strong><small>Inicio</small></div>
+            </div>
             <p class="place">🏟️ Campo de fútbol Benimàmet CF</p>
             <a class="map-link" target="_blank" href="https://maps.app.goo.gl/CbSoLSd9j3njXck67">Ver en Google Maps</a>
             <p class="cost">Costo: <strong>5€</strong> por jugador</p>
           </article>
-          <article class="panel stat-card"><span>Jugadores</span><strong id="totalPlayers">14</strong><small>Total en la base</small></article>
-          <article class="panel stat-card"><span>Confirmados</span><strong id="confirmedCount">0</strong><small>Listos para jugar</small></article>
-          <article class="panel stat-card warning"><span>En duda</span><strong id="maybeCount">0</strong><small>Pendientes</small></article>
-          <article class="panel stat-card danger"><span>No vienen</span><strong id="outCount">0</strong><small>No disponibles</small></article>
-          <article class="panel money-card"><span>Resumen económico</span><strong id="moneyTotal">0€</strong><small id="moneyText">0 jugadores confirmados · 5€ por jugador</small><button class="primary-btn editor-only hidden" id="quickGenerateBtn">Generar equipos</button></article>
+
+          <article class="panel stat-card">
+            <span>Jugadores</span>
+            <strong id="totalPlayers">14</strong>
+            <small>Total en la base</small>
+          </article>
+
+          <article class="panel stat-card">
+            <span>Confirmados</span>
+            <strong id="confirmedCount">0</strong>
+            <small>Listos para jugar</small>
+          </article>
+
+          <article class="panel stat-card warning">
+            <span>En duda</span>
+            <strong id="maybeCount">0</strong>
+            <small>Pendientes</small>
+          </article>
+
+          <article class="panel stat-card danger">
+            <span>No vienen</span>
+            <strong id="outCount">0</strong>
+            <small>No disponibles</small>
+          </article>
+
+          <article class="panel money-card">
+            <span>Resumen económico</span>
+            <strong id="moneyTotal">0€</strong>
+            <small id="moneyText">0 jugadores confirmados · 5€ por jugador</small>
+            <button class="primary-btn editor-only hidden" id="quickGenerateBtn">Generar equipos</button>
+          </article>
         </div>
-        <div class="section-head"><div><h3>Jugadores</h3><p>Vista rápida del plantel.</p></div></div>
+
+        <div class="section-head">
+          <div>
+            <h3>Jugadores</h3>
+            <p>Vista rápida del plantel.</p>
+          </div>
+        </div>
+
         <div id="dashboardPlayers" class="mini-player-grid"></div>
       </section>
 
       <section id="players" class="view">
-        <div class="section-head"><div><h3>Base de jugadores</h3><p>Stats, fotos y edición del plantel.</p></div><button class="primary-btn editor-only hidden" id="openPlayerModalBtn2">+ Nuevo jugador</button></div>
+        <div class="section-head">
+          <div>
+            <h3>Base de jugadores</h3>
+            <p>Stats, fotos y edición del plantel.</p>
+          </div>
+          <button class="primary-btn editor-only hidden" id="openPlayerModalBtn2">+ Nuevo jugador</button>
+        </div>
         <div id="playersGrid" class="players-grid"></div>
       </section>
 
@@ -62,20 +112,50 @@
         <div class="match-layout">
           <article class="panel">
             <h3>Datos del partido</h3>
+
             <div class="form-grid">
-              <label>Día<input id="matchDay" type="text" value="Miércoles" disabled /></label>
-              <label>Llegada<input id="matchArrival" type="time" value="22:00" disabled /></label>
-              <label>Inicio<input id="matchStart" type="time" value="22:30" disabled /></label>
-              <label>Costo por jugador<input id="matchCost" type="number" value="5" disabled /></label>
+              <label>Día
+                <input id="matchDay" type="text" value="Miércoles" disabled />
+              </label>
+              <label>Llegada
+                <input id="matchArrival" type="time" value="22:00" disabled />
+              </label>
+              <label>Inicio
+                <input id="matchStart" type="time" value="22:30" disabled />
+              </label>
+              <label>Costo por jugador
+                <input id="matchCost" type="number" value="5" disabled />
+              </label>
             </div>
-            <label>Cancha<input id="matchPlace" type="text" value="Campo de fútbol Benimàmet CF" disabled /></label>
-            <label>Mapa<input id="matchMap" type="text" value="https://maps.app.goo.gl/CbSoLSd9j3njXck67" disabled /></label>
+
+            <label>Cancha
+              <input id="matchPlace" type="text" value="Campo de fútbol Benimàmet CF" disabled />
+            </label>
+
+            <label>Mapa
+              <input id="matchMap" type="text" value="https://maps.app.goo.gl/CbSoLSd9j3njXck67" disabled />
+            </label>
+
             <div class="form-grid">
-              <label>Camiseta Equipo A<select id="teamAColor" disabled><option value="yellow">Boca amarilla</option><option value="blue">Boca azul</option><option value="white">Boca blanca</option></select></label>
-              <label>Camiseta Equipo B<select id="teamBColor" disabled><option value="blue">Boca azul</option><option value="yellow">Boca amarilla</option><option value="white">Boca blanca</option></select></label>
+              <label>Camiseta Equipo A
+                <select id="teamAColor" disabled>
+                  <option value="yellow">Boca amarilla</option>
+                  <option value="blue">Boca azul</option>
+                  <option value="white">Boca blanca</option>
+                </select>
+              </label>
+              <label>Camiseta Equipo B
+                <select id="teamBColor" disabled>
+                  <option value="blue">Boca azul</option>
+                  <option value="yellow">Boca amarilla</option>
+                  <option value="white">Boca blanca</option>
+                </select>
+              </label>
             </div>
+
             <button class="primary-btn editor-only hidden" id="saveMatchBtn">Guardar datos</button>
           </article>
+
           <article class="panel">
             <h3>Convocados</h3>
             <p class="muted">Confirmado, duda o no viene. Solo los confirmados entran en el armado de equipos.</p>
@@ -85,32 +165,95 @@
       </section>
 
       <section id="teams" class="view">
-        <div class="section-head"><div><h3>Equipos generados</h3><p>Planteados sobre la cancha.</p></div><button class="primary-btn editor-only hidden" id="generateTeamsBtn">Generar equipos</button></div>
+        <div class="section-head">
+          <div>
+            <h3>Equipos generados</h3>
+            <p>Planteados sobre la cancha.</p>
+          </div>
+          <div class="teams-actions editor-only hidden">
+            <button class="primary-btn" id="generateTeamsBtn">Generar</button>
+            <button class="ghost-btn" id="regenerateTeamsBtn">Regenerar</button>
+            <button class="danger-btn" id="resetTeamsBtn">Reset</button>
+            <button class="ghost-btn" id="shareTeamsBtn">Compartir</button>
+          </div>
+        </div>
+
         <div class="teams-summary">
           <div class="panel small-summary"><span>Equipo A</span><strong id="teamAAvg">0 OVR</strong></div>
           <div class="panel small-summary"><span>Equilibrio</span><strong id="balanceScore">0%</strong></div>
           <div class="panel small-summary"><span>Equipo B</span><strong id="teamBAvg">0 OVR</strong></div>
         </div>
+
+        <div class="team-comparison">
+          <article class="panel">
+            <h3 id="teamACompareTitle">Equipo A</h3>
+            <div id="teamACompare"></div>
+          </article>
+          <article class="panel">
+            <h3 id="teamBCompareTitle">Equipo B</h3>
+            <div id="teamBCompare"></div>
+          </article>
+        </div>
+
         <div class="pitch-panel panel">
-          <div class="team-tabs"><div id="teamALabel" class="shirt-tag yellow">Boca amarilla</div><div id="teamBLabel" class="shirt-tag blue">Boca azul</div></div>
-          <div class="pitch"><div class="half-line"></div><div class="center-circle"></div><div class="box left"></div><div class="box right"></div><div id="pitchPlayers"></div></div>
+          <div class="team-tabs">
+            <div id="teamALabel" class="shirt-tag yellow">Boca amarilla</div>
+            <div id="teamBLabel" class="shirt-tag blue">Boca azul</div>
+          </div>
+
+          <div class="pitch">
+            <div class="half-line"></div>
+            <div class="center-circle"></div>
+            <div class="box left"></div>
+            <div class="box right"></div>
+            <div id="pitchPlayers"></div>
+          </div>
         </div>
+
         <div class="teams-list">
-          <article class="panel"><h3 id="teamAListTitle">Equipo A</h3><div id="teamAList"></div></article>
-          <article class="panel"><h3 id="teamBListTitle">Equipo B</h3><div id="teamBList"></div></article>
+          <article class="panel">
+            <h3 id="teamAListTitle">Equipo A</h3>
+            <div id="teamAList"></div>
+          </article>
+          <article class="panel">
+            <h3 id="teamBListTitle">Equipo B</h3>
+            <div id="teamBList"></div>
+          </article>
         </div>
+
+        <article class="panel share-panel hidden" id="sharePanel">
+          <h3>Texto para WhatsApp</h3>
+          <textarea id="shareText" readonly></textarea>
+          <button class="primary-btn" id="copyShareBtn">Copiar texto</button>
+        </article>
       </section>
     </main>
   </div>
 
   <div id="playerModal" class="modal hidden">
     <div class="modal-card">
-      <div class="modal-head"><h3 id="modalTitle">Nuevo jugador</h3><button class="icon-btn" id="closePlayerModalBtn">×</button></div>
+      <div class="modal-head">
+        <h3 id="modalTitle">Nuevo jugador</h3>
+        <button class="icon-btn" id="closePlayerModalBtn">×</button>
+      </div>
+
       <input id="editingIndex" type="hidden" />
+
       <div class="modal-body">
-        <div class="photo-picker"><div id="photoPreview" class="photo-preview">📷</div><label class="upload-btn">Subir foto<input id="playerPhoto" type="file" accept="image/*" /></label><small>La foto se guarda en este navegador.</small></div>
+        <div class="photo-picker">
+          <div id="photoPreview" class="photo-preview">📷</div>
+          <label class="upload-btn">
+            Subir foto
+            <input id="playerPhoto" type="file" accept="image/*" />
+          </label>
+          <small>La foto se guarda en este navegador.</small>
+        </div>
+
         <div class="form-area">
-          <label>Nombre<input id="playerName" type="text" placeholder="Ej: Flego" /></label>
+          <label>Nombre
+            <input id="playerName" type="text" placeholder="Ej: Flego" />
+          </label>
+
           <div class="form-grid">
             <label>Técnica <input id="tecnica" type="number" min="1" max="100" /></label>
             <label>Pase <input id="pase" type="number" min="1" max="100" /></label>
@@ -123,9 +266,14 @@
           </div>
         </div>
       </div>
-      <div class="modal-actions"><button class="ghost-btn" id="cancelPlayerBtn">Cancelar</button><button class="primary-btn" id="savePlayerBtn">Guardar jugador</button></div>
+
+      <div class="modal-actions">
+        <button class="ghost-btn" id="cancelPlayerBtn">Cancelar</button>
+        <button class="primary-btn" id="savePlayerBtn">Guardar jugador</button>
+      </div>
     </div>
   </div>
+
   <script src="app.js"></script>
 </body>
 </html>
