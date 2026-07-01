@@ -1300,3 +1300,20 @@ select option { background: #101926; }
   border-color: rgba(255,212,59,.35);
   color: var(--yellow);
 }
+
+
+/* v23 team tactics and manual swaps */
+.team-tactics-panel { margin-bottom: 14px; }
+.compact-head { margin-bottom: 12px; }
+.team-tactics-grid { display: grid; grid-template-columns: repeat(3, minmax(180px, 1fr)); gap: 12px; }
+.team-tactic-card { border: 1px solid rgba(255,255,255,.12); border-radius: 16px; padding: 12px; background: rgba(255,255,255,.035); }
+.team-tactic-card h4 { margin: 0 0 10px; }
+.team-tactic-card label, .swap-grid label { display: grid; gap: 6px; color: var(--muted); font-size: 12px; font-weight: 900; text-transform: uppercase; }
+.team-tactic-card select, .swap-grid select, .move-team-select { width: 100%; }
+.swap-panel { margin-top: 14px; border-top: 1px solid rgba(255,255,255,.10); padding-top: 14px; }
+.swap-panel h4 { margin: 0 0 10px; }
+.swap-panel small { color: var(--muted); display: block; margin-top: 8px; }
+.swap-grid { display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: end; }
+.team-line.with-move { display: grid; grid-template-columns: 1fr auto minmax(120px, 160px); gap: 10px; align-items: center; }
+.pitch-player .name-tag { white-space: nowrap; }
+@media (max-width: 900px) { .team-tactics-grid, .swap-grid { grid-template-columns: 1fr; } .team-line.with-move { grid-template-columns: 1fr; } }

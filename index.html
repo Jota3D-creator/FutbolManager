@@ -276,6 +276,89 @@
           </div>
         </article>
 
+        <article class="panel team-tactics-panel editor-only hidden" id="teamTacticsPanel">
+          <div class="section-head compact-head">
+            <div>
+              <h3>Táctica por equipo</h3>
+              <p>Color, formación y cambios manuales sin regenerar todo.</p>
+            </div>
+            <button class="ghost-btn" id="applyTeamTacticsBtn">Aplicar cambios</button>
+          </div>
+
+          <div class="team-tactics-grid">
+            <div class="team-tactic-card">
+              <h4>Equipo A</h4>
+              <label>Color
+                <select id="teamAColorTeams">
+                  <option value="yellow">Boca amarilla</option>
+                  <option value="blue">Boca azul</option>
+                  <option value="white">Boca blanca</option>
+                </select>
+              </label>
+              <label>Formación
+                <select id="teamAFormation">
+                  <option value="auto">Auto</option>
+                  <option value="1-2-3-1">1-2-3-1</option>
+                  <option value="3-2-1">3-2-1</option>
+                  <option value="1-2-2-2">1-2-2-2</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="team-tactic-card">
+              <h4>Equipo B</h4>
+              <label>Color
+                <select id="teamBColorTeams">
+                  <option value="yellow">Boca amarilla</option>
+                  <option value="blue">Boca azul</option>
+                  <option value="white">Boca blanca</option>
+                </select>
+              </label>
+              <label>Formación
+                <select id="teamBFormation">
+                  <option value="auto">Auto</option>
+                  <option value="1-2-3-1">1-2-3-1</option>
+                  <option value="3-2-1">3-2-1</option>
+                  <option value="1-2-2-2">1-2-2-2</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="team-tactic-card triangular-only hidden">
+              <h4>Equipo C</h4>
+              <label>Color
+                <select id="teamCColorTeams">
+                  <option value="yellow">Boca amarilla</option>
+                  <option value="blue">Boca azul</option>
+                  <option value="white">Boca blanca</option>
+                </select>
+              </label>
+              <label>Formación
+                <select id="teamCFormation">
+                  <option value="auto">Auto</option>
+                  <option value="1-2-3-1">1-2-3-1</option>
+                  <option value="3-2-1">3-2-1</option>
+                  <option value="1-2-2-2">1-2-2-2</option>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          <div class="swap-panel">
+            <h4>Cambiar jugadores entre equipos</h4>
+            <div class="swap-grid">
+              <label>Jugador
+                <select id="swapPlayerA"></select>
+              </label>
+              <label>por
+                <select id="swapPlayerB"></select>
+              </label>
+              <button class="primary-btn" id="swapPlayersBtn">Intercambiar</button>
+            </div>
+            <small>También podés mover un jugador desde la lista de cada equipo.</small>
+          </div>
+        </article>
+
         <div class="pitch-panel panel">
           <div class="team-tabs">
             <div id="teamALabel" class="shirt-tag yellow">Boca amarilla</div>

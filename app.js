@@ -1,7 +1,8 @@
 var EDITOR_PASSWORD = "bosteros2026";
-var STORAGE_KEY = "bosteros_manager_data_v22_fix_render_players";
+var STORAGE_KEY = "bosteros_manager_data_v23_team_tactics_swap";
 
 var PREVIOUS_STORAGE_KEYS = [
+  "bosteros_manager_data_v22_fix_render_players",
   "bosteros_manager_data_v20_grouped_fine_sliders",
   "bosteros_manager_data_v19_tecnica_pase_15",
   "bosteros_manager_data_v18_card_summary_6",
@@ -478,7 +479,10 @@ var state = {
     teamBColor: "blue",
     teamCColor: "white",
     mode: "normal",
-    formation: "auto"
+    formation: "auto",
+    teamAFormation: "auto",
+    teamBFormation: "auto",
+    teamCFormation: "auto"
   }
 };
 
@@ -778,6 +782,7 @@ function applyRecommendedFormation() {
 
   saveData();
   renderTacticalRecommendation();
+  renderTeamTacticControls();
   alert("Formación recomendada aplicada: " + rec.id);
 }
 
@@ -898,6 +903,9 @@ function ensurePlayersNeverEmpty() {
   if (!state.match) state.match = {};
   if (!state.match.mode) state.match.mode = "normal";
   if (!state.match.formation) state.match.formation = "auto";
+  if (!state.match.teamAFormation) state.match.teamAFormation = state.match.formation || "auto";
+  if (!state.match.teamBFormation) state.match.teamBFormation = state.match.formation || "auto";
+  if (!state.match.teamCFormation) state.match.teamCFormation = state.match.formation || "auto";
   if (!state.match.teamCColor) state.match.teamCColor = "white";
 }
 
@@ -1097,6 +1105,11 @@ function bindEvents() {
   bindButtonIfExists("regenerateFromPlayersBtn", regenerateFromPlayers);
   bindButtonIfExists("goTeamsFromPlayersBtn", function(){ showView("teams"); });
   bindButtonIfExists("applyRecommendedFormationBtn", applyRecommendedFormation);
+  bindButtonIfExists("applyTeamTacticsBtn", applyTeamTacticsFromControls);
+  bindButtonIfExists("swapPlayersBtn", swapPlayersBetweenTeams);
+  ["teamAColorTeams", "teamBColorTeams", "teamCColorTeams", "teamAFormation", "teamBFormation", "teamCFormation"].forEach(function(id) {
+    bindInputIfExists(id, "change", applyTeamTacticsFromControls);
+  });
   bindButtonIfExists("restoreDefaultPlayersBtn", restoreDefaultPlayers);
   bindButtonIfExists("closePlayerModalBtn", closePlayerModal);
   bindButtonIfExists("cancelPlayerBtn", closePlayerModal);
@@ -2025,51 +2038,213 @@ function resetTeams() {
   document.getElementById("sharePanel").classList.add("hidden");
 }
 
+
+function teamIndexes(teamKey) {
+  if (!state.teams) return [];
+  return state.teams[teamKey] || [];
+}
+
+function teamFormationSetting(teamKey) {
+  if (!state.match) return "auto";
+  if (teamKey === "a") return state.match.teamAFormation || state.match.formation || "auto";
+  if (teamKey === "b") return state.match.teamBFormation || state.match.formation || "auto";
+  if (teamKey === "c") return state.match.teamCFormation || state.match.formation || "auto";
+  return state.match.formation || "auto";
+}
+
+function formationForTeam(teamKey, indexes) {
+  var selected = teamFormationSetting(teamKey);
+  if (selected !== "auto") return selected;
+  return recommendFormationForIndexes(indexes || teamIndexes(teamKey)).id;
+}
+
+function teamNameForKey(teamKey) {
+  if (teamKey === "a") return colorLabel[state.match.teamAColor] || "Equipo A";
+  if (teamKey === "b") return colorLabel[state.match.teamBColor] || "Equipo B";
+  if (teamKey === "c") return colorLabel[state.match.teamCColor] || "Equipo C";
+  return "Equipo";
+}
+
+function renderTeamTacticControls() {
+  if (!document.getElementById("teamTacticsPanel")) return;
+  var pairs = [
+    ["teamAColorTeams", state.match.teamAColor || "yellow"],
+    ["teamBColorTeams", state.match.teamBColor || "blue"],
+    ["teamCColorTeams", state.match.teamCColor || "white"],
+    ["teamAFormation", state.match.teamAFormation || state.match.formation || "auto"],
+    ["teamBFormation", state.match.teamBFormation || state.match.formation || "auto"],
+    ["teamCFormation", state.match.teamCFormation || state.match.formation || "auto"]
+  ];
+  pairs.forEach(function(pair) {
+    var el = document.getElementById(pair[0]);
+    if (el) el.value = pair[1];
+  });
+  renderSwapSelectors();
+}
+
+function applyTeamTacticsFromControls() {
+  if (!state.isEditor) return;
+  var aColor = document.getElementById("teamAColorTeams");
+  var bColor = document.getElementById("teamBColorTeams");
+  var cColor = document.getElementById("teamCColorTeams");
+  var aForm = document.getElementById("teamAFormation");
+  var bForm = document.getElementById("teamBFormation");
+  var cForm = document.getElementById("teamCFormation");
+
+  if (aColor) state.match.teamAColor = aColor.value;
+  if (bColor) state.match.teamBColor = bColor.value;
+  if (cColor) state.match.teamCColor = cColor.value;
+  if (aForm) state.match.teamAFormation = aForm.value;
+  if (bForm) state.match.teamBFormation = bForm.value;
+  if (cForm) state.match.teamCFormation = cForm.value;
+
+  if (!state.teams.positions) state.teams.positions = {};
+  state.teams.positions = defaultPositionsForTeams(state.teams.a || [], state.teams.b || [], state.teams.c || []);
+  saveData();
+  renderTeams();
+  renderDashboard();
+}
+
+function allTeamPlayerOptions() {
+  var list = [];
+  ["a", "b", "c"].forEach(function(teamKey) {
+    if (teamKey === "c" && !isTriangular()) return;
+    (state.teams[teamKey] || []).forEach(function(index) {
+      var p = state.players[index];
+      list.push({ index: index, teamKey: teamKey, label: p.name + " · " + teamNameForKey(teamKey) });
+    });
+  });
+  return list;
+}
+
+function renderSwapSelectors() {
+  var a = document.getElementById("swapPlayerA");
+  var b = document.getElementById("swapPlayerB");
+  if (!a || !b) return;
+  var options = allTeamPlayerOptions();
+  var html = options.map(function(item) {
+    return '<option value="' + item.index + '">' + item.label + '</option>';
+  }).join("");
+  a.innerHTML = html;
+  b.innerHTML = html;
+  if (options.length > 1) {
+    a.value = String(options[0].index);
+    b.value = String(options[1].index);
+  }
+}
+
+function findTeamOfPlayer(index) {
+  index = Number(index);
+  if ((state.teams.a || []).indexOf(index) !== -1) return "a";
+  if ((state.teams.b || []).indexOf(index) !== -1) return "b";
+  if ((state.teams.c || []).indexOf(index) !== -1) return "c";
+  return null;
+}
+
+function swapPlayersBetweenTeams() {
+  if (!state.isEditor) return;
+  var aEl = document.getElementById("swapPlayerA");
+  var bEl = document.getElementById("swapPlayerB");
+  if (!aEl || !bEl) return;
+  var first = Number(aEl.value);
+  var second = Number(bEl.value);
+  if (first === second) { alert("Elegí dos jugadores distintos."); return; }
+  var teamFirst = findTeamOfPlayer(first);
+  var teamSecond = findTeamOfPlayer(second);
+  if (!teamFirst || !teamSecond) { alert("No encontré uno de los jugadores en los equipos."); return; }
+  if (teamFirst === teamSecond) { alert("Elegí jugadores de equipos distintos para intercambiar."); return; }
+
+  function replaceInTeam(teamKey, oldIndex, newIndex) {
+    var team = state.teams[teamKey] || [];
+    var pos = team.indexOf(oldIndex);
+    if (pos !== -1) team[pos] = newIndex;
+  }
+
+  replaceInTeam(teamFirst, first, second);
+  replaceInTeam(teamSecond, second, first);
+  state.teams.positions = defaultPositionsForTeams(state.teams.a || [], state.teams.b || [], state.teams.c || []);
+  saveData();
+  renderTeams();
+  renderDashboard();
+}
+
+function movePlayerToTeam(index, targetTeam) {
+  if (!state.isEditor) return;
+  index = Number(index);
+  var currentTeam = findTeamOfPlayer(index);
+  if (!currentTeam || currentTeam === targetTeam) return;
+  state.teams[currentTeam] = (state.teams[currentTeam] || []).filter(function(i) { return i !== index; });
+  state.teams[targetTeam] = state.teams[targetTeam] || [];
+  state.teams[targetTeam].push(index);
+  state.teams.positions = defaultPositionsForTeams(state.teams.a || [], state.teams.b || [], state.teams.c || []);
+  saveData();
+  renderTeams();
+  renderDashboard();
+}
+
+function moveControlHTML(index, currentTeam) {
+  if (!state.isEditor) return "";
+  var teams = [["a", teamNameForKey("a")], ["b", teamNameForKey("b")]];
+  if (isTriangular()) teams.push(["c", teamNameForKey("c")]);
+  var options = teams.map(function(item) {
+    var selected = item[0] === currentTeam ? " selected" : "";
+    return '<option value="' + item[0] + '"' + selected + '>' + item[1] + '</option>';
+  }).join("");
+  return '<select class="move-team-select" data-index="' + index + '">' + options + '</select>';
+}
+
+function bindMoveTeamSelectors() {
+  document.querySelectorAll(".move-team-select").forEach(function(select) {
+    select.addEventListener("change", function() {
+      movePlayerToTeam(select.dataset.index, select.value);
+    });
+  });
+}
+
 function defaultPositionsForTeams(a, b, c) {
   var positions = {};
-  var formation = activeFormationId();
 
   var normal = {
     "1-2-3-1": {
       left: {
-        arquero: [[11,50]],
-        defensa: [[25,35], [25,65], [22,50], [28,50]],
-        medio: [[40,25], [40,50], [40,75], [35,50]],
-        ataque: [[49,50], [47,35], [47,65], [44,50]]
+        arquero: [[10,50]],
+        defensa: [[23,33], [23,67], [20,50], [26,50], [20,25]],
+        medio: [[38,22], [38,50], [38,78], [33,38], [33,62], [43,50]],
+        ataque: [[50,50], [48,28], [48,72], [46,40], [46,60]]
       },
       right: {
-        arquero: [[89,50]],
-        defensa: [[75,35], [75,65], [78,50], [72,50]],
-        medio: [[60,25], [60,50], [60,75], [65,50]],
-        ataque: [[51,50], [53,35], [53,65], [56,50]]
+        arquero: [[90,50]],
+        defensa: [[77,33], [77,67], [80,50], [74,50], [80,25]],
+        medio: [[62,22], [62,50], [62,78], [67,38], [67,62], [57,50]],
+        ataque: [[50,50], [52,28], [52,72], [54,40], [54,60]]
       }
     },
     "3-2-1": {
       left: {
-        arquero: [[11,50]],
-        defensa: [[23,25], [23,50], [23,75], [18,50]],
-        medio: [[39,38], [39,62], [35,50], [43,50]],
-        ataque: [[49,50], [47,35], [47,65], [44,50]]
+        arquero: [[10,50]],
+        defensa: [[22,24], [22,50], [22,76], [18,37], [18,63]],
+        medio: [[38,34], [38,66], [34,50], [42,50], [35,20]],
+        ataque: [[50,50], [48,28], [48,72], [46,40], [46,60]]
       },
       right: {
-        arquero: [[89,50]],
-        defensa: [[77,25], [77,50], [77,75], [82,50]],
-        medio: [[61,38], [61,62], [65,50], [57,50]],
-        ataque: [[51,50], [53,35], [53,65], [56,50]]
+        arquero: [[90,50]],
+        defensa: [[78,24], [78,50], [78,76], [82,37], [82,63]],
+        medio: [[62,34], [62,66], [66,50], [58,50], [65,20]],
+        ataque: [[50,50], [52,28], [52,72], [54,40], [54,60]]
       }
     },
     "1-2-2-2": {
       left: {
-        arquero: [[11,50]],
-        defensa: [[25,36], [25,64], [22,50], [28,50]],
-        medio: [[39,38], [39,62], [35,50], [43,50]],
-        ataque: [[49,38], [49,62], [46,50], [47,25]]
+        arquero: [[10,50]],
+        defensa: [[24,34], [24,66], [20,50], [28,50], [20,25]],
+        medio: [[38,35], [38,65], [34,50], [42,50], [36,22]],
+        ataque: [[50,32], [50,68], [47,50], [46,22], [46,78]]
       },
       right: {
-        arquero: [[89,50]],
-        defensa: [[75,36], [75,64], [78,50], [72,50]],
-        medio: [[61,38], [61,62], [65,50], [57,50]],
-        ataque: [[51,38], [51,62], [54,50], [53,25]]
+        arquero: [[90,50]],
+        defensa: [[76,34], [76,66], [80,50], [72,50], [80,25]],
+        medio: [[62,35], [62,65], [66,50], [58,50], [64,22]],
+        ataque: [[50,32], [50,68], [53,50], [54,22], [54,78]]
       }
     }
   };
@@ -2077,26 +2252,26 @@ function defaultPositionsForTeams(a, b, c) {
   var tri = {
     left: {
       arquero: [[7,50]],
-      defensa: [[16,28], [16,50], [16,72], [12,50]],
-      medio: [[26,35], [26,65], [24,50], [29,50]],
-      ataque: [[32,50], [31,30], [31,70], [29,50]]
+      defensa: [[16,26], [16,50], [16,74], [12,38], [12,62]],
+      medio: [[27,25], [27,50], [27,75], [23,38], [23,62]],
+      ataque: [[34,35], [34,65], [31,50], [31,25], [31,75]]
     },
     center: {
-      arquero: [[50,88]],
-      defensa: [[40,70], [50,70], [60,70], [50,78]],
-      medio: [[42,50], [58,50], [50,54], [50,42]],
-      ataque: [[50,23], [42,30], [58,30], [50,34]]
+      arquero: [[50,90]],
+      defensa: [[36,72], [50,72], [64,72], [43,80], [57,80]],
+      medio: [[38,50], [50,50], [62,50], [44,60], [56,60]],
+      ataque: [[43,25], [57,25], [50,32], [36,35], [64,35]]
     },
     right: {
       arquero: [[93,50]],
-      defensa: [[84,28], [84,50], [84,72], [88,50]],
-      medio: [[74,35], [74,65], [76,50], [71,50]],
-      ataque: [[68,50], [69,30], [69,70], [71,50]]
+      defensa: [[84,26], [84,50], [84,74], [88,38], [88,62]],
+      medio: [[73,25], [73,50], [73,75], [77,38], [77,62]],
+      ataque: [[66,35], [66,65], [69,50], [69,25], [69,75]]
     }
   };
 
   function assignTeam(indexes, formationSide) {
-    var sorted = sortIndexesForFormation(indexes);
+    var sorted = sortIndexesForFormation(indexes || []);
     var usedByRole = { arquero: 0, defensa: 0, medio: 0, ataque: 0 };
 
     sorted.forEach(function(index) {
@@ -2104,11 +2279,15 @@ function defaultPositionsForTeams(a, b, c) {
       var slotIndex = usedByRole[role] || 0;
       var slotList = formationSide[role] || formationSide.medio;
       var pos = slotList[slotIndex];
-
       usedByRole[role] = slotIndex + 1;
 
       if (!pos) {
-        pos = slotList[slotList.length - 1] || formationSide.medio[0];
+        var base = slotList[slotList.length - 1] || formationSide.medio[0];
+        var offset = slotIndex - slotList.length + 1;
+        pos = [
+          Math.max(4, Math.min(96, base[0] + (offset % 2 === 0 ? 3 : -3))),
+          Math.max(8, Math.min(92, base[1] + offset * 9))
+        ];
       }
 
       positions[index] = { x: pos[0], y: pos[1] };
@@ -2120,9 +2299,10 @@ function defaultPositionsForTeams(a, b, c) {
     assignTeam(b || [], tri.center);
     assignTeam(c || [], tri.right);
   } else {
-    var normalFormation = normal[formation] || normal["1-2-3-1"];
-    assignTeam(a || [], normalFormation.left);
-    assignTeam(b || [], normalFormation.right);
+    var formationA = formationForTeam("a", a || []);
+    var formationB = formationForTeam("b", b || []);
+    assignTeam(a || [], (normal[formationA] || normal["1-2-3-1"]).left);
+    assignTeam(b || [], (normal[formationB] || normal["1-2-3-1"]).right);
   }
 
   return positions;
@@ -2160,12 +2340,13 @@ function renderTeams() {
   setTeamLabels(labelA, labelB, labelC);
 
   renderPitch("pitchPlayers", a, b, c, true);
-  renderTeamList("teamAList", a);
-  renderTeamList("teamBList", b);
-  renderTeamList("teamCList", c);
+  renderTeamList("teamAList", a, "a");
+  renderTeamList("teamBList", b, "b");
+  renderTeamList("teamCList", c, "c");
   renderTeamCompare("teamACompare", a);
   renderTeamCompare("teamBCompare", b);
   renderTeamCompare("teamCCompare", c);
+  bindMoveTeamSelectors();
 }
 
 function setTeamLabels(labelA, labelB, labelC) {
@@ -2342,13 +2523,13 @@ function movePlayerOnPitch(e, pitch, el, shouldSave) {
   }
 }
 
-function renderTeamList(id, indexes) {
+function renderTeamList(id, indexes, teamKey) {
   var container = document.getElementById(id);
   if (!container) return;
 
-  container.innerHTML = indexes.map(function(index) {
+  container.innerHTML = (indexes || []).map(function(index) {
     var p = state.players[index];
-    return '<div class="team-line"><span>' + p.name + ' <small class="muted">· ' + displayPositionLabel(p) + '</small></span><strong>' + overall(p) + '</strong></div>';
+    return '<div class="team-line with-move"><span>' + p.name + ' <small class="muted">· ' + displayPositionLabel(p) + '</small></span><strong>' + overall(p) + '</strong>' + moveControlHTML(index, teamKey) + '</div>';
   }).join("") || '<p class="muted">Todavía no hay equipo generado.</p>';
 }
 
