@@ -1,5 +1,5 @@
 var EDITOR_PASSWORD = "bosteros2026";
-var STORAGE_KEY = "bosteros_manager_data_v13_save_regenerate";
+var STORAGE_KEY = "bosteros_manager_data_v15_live_card_preview";
 
 var defaultPlayers = [
   {
@@ -470,24 +470,72 @@ var state = {
   }
 };
 
+var summaryConfig = [
+  ["tecnica", "Técnica", "#35e875", [
+    ["control", 0.30],
+    ["regate", 0.25],
+    ["tecnicaBase", 0.25],
+    ["passing", 0.10],
+    ["agilidad", 0.10]
+  ]],
+  ["pase", "Pase", "#4ca8ff", [
+    ["passing", 0.40],
+    ["visionJuego", 0.25],
+    ["decisiones", 0.20],
+    ["calma", 0.10],
+    ["juegoEquipo", 0.05]
+  ]],
+  ["definicion", "Definición", "#ffd43b", [
+    ["finishing", 0.45],
+    ["tiroLargo", 0.20],
+    ["calma", 0.15],
+    ["movimientoSinPelota", 0.15],
+    ["tecnicaBase", 0.05]
+  ]],
+  ["defensa", "Defensa", "#ff5353", [
+    ["entrada", 0.30],
+    ["marca", 0.30],
+    ["anticipacion", 0.20],
+    ["disciplina", 0.10],
+    ["fuerza", 0.10]
+  ]],
+  ["fisico", "Físico", "#9c6bff", [
+    ["aceleracion", 0.20],
+    ["velocidad", 0.20],
+    ["resistencia", 0.25],
+    ["agilidad", 0.15],
+    ["fuerza", 0.10],
+    ["intensidad", 0.10]
+  ]],
+  ["inteligencia", "Inteligencia", "#32d4d9", [
+    ["anticipacion", 0.20],
+    ["decisiones", 0.25],
+    ["visionJuego", 0.25],
+    ["movimientoSinPelota", 0.15],
+    ["calma", 0.10],
+    ["disciplina", 0.05]
+  ]],
+  ["compromiso", "Compromiso", "#ff5bae", [
+    ["intensidad", 0.35],
+    ["disciplina", 0.20],
+    ["juegoEquipo", 0.20],
+    ["resistencia", 0.15],
+    ["calma", 0.10]
+  ]]
+];
+
+var summaryStatKeys = summaryConfig.map(function(item) {
+  return item[0];
+});
+
 var statGroups = [
-  {
-    title: "Stats existentes",
-    stats: [
-      ["tecnica", "Técnica", "#35e875"],
-      ["pase", "Pase", "#4ca8ff"],
-      ["definicion", "Definición", "#ffd43b"],
-      ["defensa", "Defensa", "#ff5353"],
-      ["fisico", "Físico", "#9c6bff"],
-      ["inteligencia", "Inteligencia", "#32d4d9"],
-      ["compromiso", "Compromiso", "#ff5bae"],
-      ["arquero", "Arquero", "#ffffff"]
-    ]
-  },
   {
     title: "Técnicos",
     stats: [
       ["control", "Control", "#35e875"],
+      ["tecnicaBase", "Técnica individual", "#35e875"],
+      ["passing", "Pase", "#4ca8ff"],
+      ["finishing", "Definición", "#ffd43b"],
       ["entrada", "Entrada / Tacle", "#ff5353"],
       ["marca", "Marca", "#ff7a7a"],
       ["regate", "Regate", "#4ca8ff"],
@@ -516,6 +564,12 @@ var statGroups = [
       ["resistencia", "Resistencia", "#ffd43b"],
       ["velocidad", "Velocidad", "#9c6bff"]
     ]
+  },
+  {
+    title: "Especial",
+    stats: [
+      ["arquero", "Arquero", "#ffffff"]
+    ]
   }
 ];
 
@@ -524,19 +578,19 @@ var statConfig = statGroups.reduce(function(list, group) {
 }, []);
 
 var compareConfig = [
-  ["Ataque", ["definicion", "regate", "tiroLargo", "control"]],
-  ["Defensa", ["defensa", "entrada", "marca", "anticipacion"]],
-  ["Físico", ["fisico", "aceleracion", "agilidad", "fuerza", "resistencia", "velocidad"]],
-  ["Táctica", ["inteligencia", "decisiones", "disciplina", "visionJuego", "juegoEquipo"]]
+  ["Ataque", ["tecnica", "pase", "definicion"]],
+  ["Defensa", ["defensa"]],
+  ["Físico", ["fisico"]],
+  ["Juego", ["pase", "inteligencia", "compromiso"]]
 ];
 
 var categoryConfig = [
-  ["Técnica", ["tecnica", "control", "regate"]],
-  ["Ataque", ["definicion", "tiroLargo", "movimientoSinPelota"]],
-  ["Defensa", ["defensa", "entrada", "marca", "anticipacion"]],
-  ["Juego", ["pase", "visionJuego", "decisiones", "juegoEquipo"]],
-  ["Físico", ["fisico", "aceleracion", "agilidad", "fuerza", "resistencia", "velocidad"]],
-  ["Mental", ["inteligencia", "calma", "disciplina", "intensidad", "compromiso"]]
+  ["Técnica", ["tecnica"]],
+  ["Ataque", ["definicion"]],
+  ["Defensa", ["defensa"]],
+  ["Juego", ["pase", "inteligencia"]],
+  ["Físico", ["fisico"]],
+  ["Mental", ["inteligencia", "compromiso"]]
 ];
 
 var playersDirty = false;
@@ -649,6 +703,51 @@ function init() {
   renderAll();
 }
 
+
+function clampStat(value) {
+  value = Number(value);
+  if (!value) value = 50;
+  return Math.max(1, Math.min(100, Math.round(value)));
+}
+
+function weightedAverageFromPairs(p, pairs) {
+  var total = 0;
+  var weightTotal = 0;
+
+  pairs.forEach(function(pair) {
+    var key = pair[0];
+    var weight = pair[1];
+    total += Number(p[key] || 50) * weight;
+    weightTotal += weight;
+  });
+
+  if (!weightTotal) return 50;
+  return clampStat(total / weightTotal);
+}
+
+function calculateSummaryStats(p) {
+  var summary = {};
+
+  summaryConfig.forEach(function(item) {
+    var key = item[0];
+    var pairs = item[3];
+    summary[key] = weightedAverageFromPairs(p, pairs);
+  });
+
+  return summary;
+}
+
+function applyDerivedSummary(p) {
+  var summary = calculateSummaryStats(p);
+
+  Object.keys(summary).forEach(function(key) {
+    p[key] = summary[key];
+  });
+
+  return p;
+}
+
+
 function inferNaturalPosition(p) {
   var def = Number(p.defensa || 50) + Number(p.marca || 50) + Number(p.entrada || 50);
   var mid = Number(p.pase || 50) + Number(p.visionJuego || 50) + Number(p.decisiones || 50);
@@ -673,6 +772,9 @@ function normalizePlayers() {
 
     var defaults = {
       control: Math.round((base.tecnica + base.pase) / 2),
+      tecnicaBase: base.tecnica,
+      passing: base.pase,
+      finishing: base.definicion,
       entrada: base.defensa,
       marca: base.defensa,
       regate: base.tecnica,
@@ -702,12 +804,13 @@ function normalizePlayers() {
     if (!p.status) p.status = "base";
     if (!p.photo) p.photo = "";
     if (!p.posicionNatural) p.posicionNatural = inferNaturalPosition(p);
+
+    applyDerivedSummary(p);
     return p;
   });
 
   saveData();
 }
-
 
 function saveData() {
   try {
@@ -924,6 +1027,8 @@ function renderAll() {
 function averageKeys(p, keys) {
   if (!keys.length) return 0;
 
+  applyDerivedSummary(p);
+
   var total = keys.reduce(function(sum, key) {
     return sum + Number(p[key] || 50);
   }, 0);
@@ -976,6 +1081,8 @@ function renderDashboard() {
 }
 
 function playerCardHTML(p, i, editable) {
+  applyDerivedSummary(p);
+
   var summaryStats = [
     ["tecnica", "Técnica", "#35e875"],
     ["pase", "Pase", "#4ca8ff"],
@@ -1025,6 +1132,42 @@ function playerCardHTML(p, i, editable) {
     actions +
     '</article>';
 }
+
+
+function modalPlayerPreviewCardHTML(p) {
+  applyDerivedSummary(p);
+
+  var summaryStats = [
+    ["tecnica", "Técnica", "#35e875"],
+    ["pase", "Pase", "#4ca8ff"],
+    ["definicion", "Def.", "#ffd43b"],
+    ["defensa", "Defensa", "#ff5353"],
+    ["fisico", "Físico", "#9c6bff"],
+    ["inteligencia", "Intel.", "#32d4d9"],
+    ["compromiso", "Comp.", "#ff5bae"]
+  ];
+
+  var stats = summaryStats.map(function(s) {
+    var key = s[0], label = s[1], color = s[2];
+    return '<div class="stat-row"><span>' + label + '</span><div class="bar"><i style="--w:' + p[key] + '%;--c:' + color + '"></i></div><b>' + p[key] + '</b></div>';
+  }).join("");
+
+  var positionText = positionLabel[p.posicionNatural] || "Polivalente";
+
+  return '<article class="player-card live-card">' +
+    '<div class="player-top">' + avatar(p) +
+    '<div><h4>' + p.name + '</h4><div class="ovr">' + overall(p) + ' OVR</div><span class="position-tag">' + positionText + '</span></div></div>' +
+    stats +
+    '</article>';
+}
+
+function updateModalCardPreview() {
+  var container = document.getElementById("modalPlayerCardPreview");
+  if (!container) return;
+
+  container.innerHTML = modalPlayerPreviewCardHTML(modalPlayerDraft());
+}
+
 
 function renderPlayers() {
   var grid = document.getElementById("playersGrid");
@@ -1288,11 +1431,34 @@ function openPlayerModal(index) {
   }
 }
 
+function renderCalculatedSummaryHTML(p) {
+  var summary = calculateSummaryStats(p);
+
+  return '<details class="stat-section calculated-summary" open>' +
+    '<summary>Resumen calculado</summary>' +
+    '<div class="summary-help">Estos valores no se editan directo. Se calculan a partir de los sliders técnicos, mentales y físicos.</div>' +
+    '<div class="slider-list">' +
+    summaryConfig.map(function(item) {
+      var key = item[0];
+      var label = item[1];
+      var color = item[2];
+      var value = summary[key];
+
+      return '<div class="slider-row summary-row">' +
+        '<label>' + label + '</label>' +
+        '<div class="summary-meter"><i id="' + key + 'SummaryBar" style="--w:' + value + '%;--c:' + color + '"></i></div>' +
+        '<span class="slider-value" id="' + key + 'SummaryValue">' + value + '</span>' +
+      '</div>';
+    }).join("") +
+    '</div>' +
+  '</details>';
+}
+
 function renderStatsEditor(p) {
   var container = document.getElementById("statsEditor");
   if (!container) return;
 
-  container.innerHTML = statGroups.map(function(group, groupIndex) {
+  container.innerHTML = renderCalculatedSummaryHTML(p) + statGroups.map(function(group, groupIndex) {
     var open = groupIndex === 0 ? " open" : "";
 
     return '<details class="stat-section"' + open + '>' +
@@ -1317,20 +1483,45 @@ function renderStatsEditor(p) {
     input.addEventListener("input", function() {
       var valueEl = document.getElementById(input.id + "Value");
       if (valueEl) valueEl.textContent = input.value;
+      setPlayersDirty(true);
       updateModalOverallPreview();
+      updateCalculatedSummaryPreview();
+      updateModalCardPreview();
     });
   });
+
+  updateCalculatedSummaryPreview();
 }
 
 function modalPlayerDraft() {
-  var draft = { name: document.getElementById("playerName").value.trim() || "Jugador" };
+  var draft = {
+    name: document.getElementById("playerName").value.trim() || "Jugador",
+    posicionNatural: document.getElementById("posicionNatural") ? document.getElementById("posicionNatural").value || "polivalente" : "polivalente",
+    photo: document.getElementById("photoPreview") ? document.getElementById("photoPreview").dataset.photo || "" : "",
+    status: "base"
+  };
 
   statConfig.forEach(function(stat) {
     var input = document.getElementById(stat[0]);
     draft[stat[0]] = input ? Number(input.value) : 50;
   });
 
+  applyDerivedSummary(draft);
   return draft;
+}
+
+function updateCalculatedSummaryPreview() {
+  var draft = modalPlayerDraft();
+  var summary = calculateSummaryStats(draft);
+
+  summaryConfig.forEach(function(item) {
+    var key = item[0];
+    var bar = document.getElementById(key + "SummaryBar");
+    var value = document.getElementById(key + "SummaryValue");
+
+    if (bar) bar.style.setProperty("--w", summary[key] + "%");
+    if (value) value.textContent = summary[key];
+  });
 }
 
 function updateModalOverallPreview() {
@@ -1339,11 +1530,22 @@ function updateModalOverallPreview() {
   preview.textContent = overall(modalPlayerDraft()) + " OVR";
 }
 
+
 function fillModal(p) {
   document.getElementById("playerName").value = p.name;
-  document.getElementById("playerName").addEventListener("input", function(){ setPlayersDirty(true); });
+  document.getElementById("playerName").addEventListener("input", function(){
+    setPlayersDirty(true);
+    updateModalOverallPreview();
+    updateCalculatedSummaryPreview();
+    updateModalCardPreview();
+  });
   document.getElementById("posicionNatural").value = p.posicionNatural || "polivalente";
-  document.getElementById("posicionNatural").addEventListener("change", function(){ setPlayersDirty(true); });
+  document.getElementById("posicionNatural").addEventListener("change", function(){
+    setPlayersDirty(true);
+    updateModalOverallPreview();
+    updateCalculatedSummaryPreview();
+    updateModalCardPreview();
+  });
   renderStatsEditor(p);
   updateModalOverallPreview();
 
@@ -1351,6 +1553,9 @@ function fillModal(p) {
   preview.dataset.photo = p.photo || "";
   preview.innerHTML = p.photo ? '<img src="' + p.photo + '">' : "📷";
   document.getElementById("playerPhoto").value = "";
+  updateModalOverallPreview();
+  updateCalculatedSummaryPreview();
+  updateModalCardPreview();
 }
 function closePlayerModal() {
   document.getElementById("playerModal").classList.add("hidden");
@@ -1388,6 +1593,7 @@ function handlePhotoInput(e) {
       preview.dataset.photo = data;
       preview.innerHTML = '<img src="' + data + '">';
       setPlayersDirty(true);
+      updateModalCardPreview();
     };
     img.src = event.target.result;
   };
@@ -1414,6 +1620,8 @@ function savePlayerFromModal() {
     p[stat[0]] = readNumber(stat[0]);
   });
 
+  applyDerivedSummary(p);
+
   var editingIndex = document.getElementById("editingIndex").value;
   if (editingIndex !== "") {
     p.status = state.players[Number(editingIndex)].status || "confirmed";
@@ -1428,8 +1636,10 @@ function savePlayerFromModal() {
   renderAll();
 }
 
+
 function readNumber(id) {
-  var v = Number(document.getElementById(id).value);
+  var el = document.getElementById(id);
+  var v = el ? Number(el.value) : 50;
   if (!v) v = 50;
   return Math.max(1, Math.min(100, v));
 }
@@ -1620,6 +1830,7 @@ function teamStatAverage(indexes, keys) {
   if (!indexes.length) return 0;
   var total = 0;
   indexes.forEach(function(index) {
+    applyDerivedSummary(state.players[index]);
     keys.forEach(function(key) {
       total += state.players[index][key];
     });

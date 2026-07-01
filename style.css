@@ -1096,3 +1096,92 @@ select option { background: #101926; }
   outline: 1px solid rgba(255,212,59,.45);
   box-shadow: 0 0 22px rgba(255,212,59,.08);
 }
+
+
+/* v14 derived summary */
+.calculated-summary {
+  border-color: rgba(53,232,117,.28);
+  background: rgba(53,232,117,.045);
+}
+
+.summary-help {
+  color: var(--muted);
+  font-size: 12px;
+  margin: 4px 0 12px;
+  line-height: 1.4;
+}
+
+.summary-meter {
+  height: 7px;
+  background: rgba(255,255,255,.13);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.summary-meter i {
+  display: block;
+  height: 100%;
+  width: var(--w);
+  background: var(--c);
+  box-shadow: 0 0 16px var(--c);
+}
+
+.summary-row label {
+  color: white;
+}
+
+
+/* v15 live card preview inside player modal */
+.modal-live-preview {
+  margin: 14px 0;
+  padding: 14px;
+  border: 1px solid rgba(53,232,117,.24);
+  border-radius: 18px;
+  background: rgba(53,232,117,.035);
+}
+
+.modal-live-preview-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: baseline;
+  margin-bottom: 12px;
+}
+
+.modal-live-preview-head span {
+  color: var(--green);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+}
+
+.modal-live-preview-head small {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.modal-live-preview .player-card {
+  box-shadow: none;
+  background: rgba(7,13,22,.72);
+}
+
+.modal-live-preview .player-card:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.modal-live-preview .card-note,
+.modal-live-preview .card-actions,
+.modal-live-preview .position-editor {
+  display: none;
+}
+
+@media (min-width: 1000px) {
+  .modal-live-preview {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    backdrop-filter: blur(10px);
+  }
+}
