@@ -1,5 +1,5 @@
 var EDITOR_PASSWORD = "bosteros2026";
-var STORAGE_KEY = "bosteros_manager_data_v5_sliders";
+var STORAGE_KEY = "bosteros_manager_data_v7_import_position";
 
 var defaultPlayers = [
   {
@@ -30,6 +30,7 @@ var defaultPlayers = [
     "resistencia": 80,
     "velocidad": 80,
     "arquero": 50,
+    "posicionNatural": "defensa",
     "photo": "",
     "status": "confirmed"
   },
@@ -61,6 +62,7 @@ var defaultPlayers = [
     "resistencia": 65,
     "velocidad": 65,
     "arquero": 50,
+    "posicionNatural": "defensa",
     "photo": "",
     "status": "confirmed"
   },
@@ -92,6 +94,7 @@ var defaultPlayers = [
     "resistencia": 60,
     "velocidad": 60,
     "arquero": 50,
+    "posicionNatural": "delantero",
     "photo": "",
     "status": "confirmed"
   },
@@ -123,6 +126,7 @@ var defaultPlayers = [
     "resistencia": 65,
     "velocidad": 65,
     "arquero": 50,
+    "posicionNatural": "defensa",
     "photo": "",
     "status": "confirmed"
   },
@@ -154,6 +158,7 @@ var defaultPlayers = [
     "resistencia": 55,
     "velocidad": 55,
     "arquero": 50,
+    "posicionNatural": "mediocampo",
     "photo": "",
     "status": "confirmed"
   },
@@ -185,6 +190,7 @@ var defaultPlayers = [
     "resistencia": 85,
     "velocidad": 85,
     "arquero": 50,
+    "posicionNatural": "defensa",
     "photo": "",
     "status": "confirmed"
   },
@@ -216,6 +222,7 @@ var defaultPlayers = [
     "resistencia": 70,
     "velocidad": 70,
     "arquero": 50,
+    "posicionNatural": "mediocampo",
     "photo": "",
     "status": "confirmed"
   },
@@ -247,6 +254,7 @@ var defaultPlayers = [
     "resistencia": 55,
     "velocidad": 55,
     "arquero": 50,
+    "posicionNatural": "delantero",
     "photo": "",
     "status": "confirmed"
   },
@@ -278,6 +286,7 @@ var defaultPlayers = [
     "resistencia": 75,
     "velocidad": 75,
     "arquero": 50,
+    "posicionNatural": "mediocampo",
     "photo": "",
     "status": "confirmed"
   },
@@ -309,6 +318,7 @@ var defaultPlayers = [
     "resistencia": 70,
     "velocidad": 70,
     "arquero": 50,
+    "posicionNatural": "delantero",
     "photo": "",
     "status": "confirmed"
   },
@@ -340,6 +350,7 @@ var defaultPlayers = [
     "resistencia": 80,
     "velocidad": 80,
     "arquero": 50,
+    "posicionNatural": "defensa",
     "photo": "",
     "status": "confirmed"
   },
@@ -371,6 +382,7 @@ var defaultPlayers = [
     "resistencia": 60,
     "velocidad": 60,
     "arquero": 50,
+    "posicionNatural": "mediocampo",
     "photo": "",
     "status": "confirmed"
   },
@@ -402,6 +414,7 @@ var defaultPlayers = [
     "resistencia": 50,
     "velocidad": 50,
     "arquero": 50,
+    "posicionNatural": "mediocampo",
     "photo": "",
     "status": "confirmed"
   },
@@ -433,6 +446,7 @@ var defaultPlayers = [
     "resistencia": 75,
     "velocidad": 75,
     "arquero": 50,
+    "posicionNatural": "lateral",
     "photo": "",
     "status": "confirmed"
   }
@@ -529,6 +543,56 @@ var colorLabel = {
   white: "Boca blanca"
 };
 
+
+var positionLabel = {
+  polivalente: "Polivalente",
+  arquero: "Arquero",
+  defensa: "Defensa",
+  lateral: "Lateral",
+  mediocampo: "Mediocampo",
+  extremo: "Extremo",
+  delantero: "Delantero"
+};
+
+function positionGroup(pos) {
+  if (pos === "arquero") return "arquero";
+  if (pos === "defensa" || pos === "lateral") return "defensa";
+  if (pos === "mediocampo" || pos === "polivalente") return "medio";
+  if (pos === "extremo" || pos === "delantero") return "ataque";
+  return "medio";
+}
+
+function positionScore(indexes) {
+  var counts = { arquero: 0, defensa: 0, medio: 0, ataque: 0 };
+
+  indexes.forEach(function(index) {
+    var p = state.players[index];
+    var group = positionGroup(p.posicionNatural || "polivalente");
+    counts[group] += 1;
+  });
+
+  return counts;
+}
+
+function rolePenaltyForTeam(indexes, candidateIndex) {
+  var next = indexes.slice();
+  next.push(candidateIndex);
+
+  var counts = positionScore(next);
+  var penalty = 0;
+
+  if (counts.defensa === 0) penalty += 10;
+  if (counts.medio === 0) penalty += 8;
+  if (counts.ataque === 0) penalty += 8;
+
+  if (counts.defensa > 3) penalty += (counts.defensa - 3) * 3;
+  if (counts.ataque > 3) penalty += (counts.ataque - 3) * 3;
+  if (counts.arquero > 1) penalty += (counts.arquero - 1) * 8;
+
+  return penalty;
+}
+
+
 function init() {
   var saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem("bosteros_manager_data_v4_full_stats") || localStorage.getItem("bosteros_manager_data_v3_mobile_drag") || localStorage.getItem("bosteros_manager_data_v2");
 
@@ -553,6 +617,17 @@ function init() {
   renderAll();
 }
 
+
+
+function inferNaturalPosition(p) {
+  var def = Number(p.defensa || 50) + Number(p.marca || 50) + Number(p.entrada || 50);
+  var mid = Number(p.pase || 50) + Number(p.visionJuego || 50) + Number(p.decisiones || 50);
+  var att = Number(p.definicion || 50) + Number(p.regate || 50) + Number(p.tiroLargo || 50);
+
+  if (def >= mid && def >= att) return "defensa";
+  if (att >= def && att >= mid) return "delantero";
+  return "mediocampo";
+}
 
 function normalizePlayers() {
   state.players = state.players.map(function(p) {
@@ -596,6 +671,7 @@ function normalizePlayers() {
 
     if (!p.status) p.status = "confirmed";
     if (!p.photo) p.photo = "";
+    if (!p.posicionNatural) p.posicionNatural = inferNaturalPosition(p);
     return p;
   });
 
@@ -785,7 +861,7 @@ function playerCardHTML(p, i, editable) {
 
   return '<article class="player-card">' +
     '<div class="player-top">' + avatar(p) +
-    '<div><h4>' + p.name + '</h4><div class="ovr">' + overall(p) + ' OVR</div></div></div>' +
+    '<div><h4>' + p.name + '</h4><div class="ovr">' + overall(p) + ' OVR</div><span class="position-tag">' + (positionLabel[p.posicionNatural] || "Polivalente") + '</span></div></div>' +
     '<div class="category-pill-grid">' + summary + '</div>' +
     '<div class="card-note">Resumen condensado. Editar para sliders completos.</div>' +
     actions +
@@ -801,7 +877,7 @@ function renderCallList() {
   document.getElementById("callList").innerHTML = state.players.map(function(p, i) {
     var disabled = state.isEditor ? "" : "disabled";
     return '<div class="call-item">' +
-      '<div class="call-player">' + avatar(p) + '<div><strong>' + p.name + '</strong><div class="muted">' + overall(p) + ' OVR</div></div></div>' +
+      '<div class="call-player">' + avatar(p) + '<div><strong>' + p.name + '</strong><div class="muted">' + overall(p) + ' OVR · ' + (positionLabel[p.posicionNatural] || "Polivalente") + '</div></div></div>' +
       '<select class="status-select" ' + disabled + ' onchange="changeStatus(' + i + ', this.value)">' +
         '<option value="confirmed" ' + selected(p.status, "confirmed") + '>Confirmado</option>' +
         '<option value="maybe" ' + selected(p.status, "maybe") + '>En duda</option>' +
@@ -854,6 +930,7 @@ function saveMatchFromForm() {
 function emptyPlayerTemplate() {
   var p = {
     name: "",
+    posicionNatural: "polivalente",
     photo: "",
     status: "confirmed"
   };
@@ -1000,6 +1077,7 @@ function savePlayerFromModal() {
 
   var p = {
     name: name,
+    posicionNatural: document.getElementById("posicionNatural").value || "polivalente",
     photo: document.getElementById("photoPreview").dataset.photo || "",
     status: "confirmed"
   };
@@ -1061,13 +1139,23 @@ function makeTeams(randomize) {
   var b = [];
 
   confirmed.forEach(function(item) {
+    var maxPerTeam = Math.ceil(confirmed.length / 2);
+
     var scoreA = a.reduce(function(sum, x){ return sum + overall(state.players[x]); }, 0);
     var scoreB = b.reduce(function(sum, x){ return sum + overall(state.players[x]); }, 0);
 
-    if (a.length > b.length) b.push(item.index);
-    else if (b.length > a.length) a.push(item.index);
-    else if (scoreA <= scoreB) a.push(item.index);
-    else b.push(item.index);
+    var optionA = scoreA + overall(item.player) + rolePenaltyForTeam(a, item.index);
+    var optionB = scoreB + overall(item.player) + rolePenaltyForTeam(b, item.index);
+
+    if (a.length >= maxPerTeam) {
+      b.push(item.index);
+    } else if (b.length >= maxPerTeam) {
+      a.push(item.index);
+    } else if (optionA <= optionB) {
+      a.push(item.index);
+    } else {
+      b.push(item.index);
+    }
   });
 
   state.teams = { a: a, b: b, positions: defaultPositionsForTeams(a, b) };
@@ -1273,7 +1361,7 @@ function movePlayerOnPitch(e, pitch, el, shouldSave) {
 function renderTeamList(id, indexes) {
   document.getElementById(id).innerHTML = indexes.map(function(index) {
     var p = state.players[index];
-    return '<div class="team-line"><span>' + p.name + '</span><strong>' + overall(p) + '</strong></div>';
+    return '<div class="team-line"><span>' + p.name + ' <small class="muted">· ' + (positionLabel[p.posicionNatural] || "Polivalente") + '</small></span><strong>' + overall(p) + '</strong></div>';
   }).join("") || '<p class="muted">Todavía no hay equipo generado.</p>';
 }
 
@@ -1347,8 +1435,14 @@ function exportDatabase() {
 
 function triggerImportDatabase() {
   if (!state.isEditor) {
-    alert("Necesitás activar modo editor para importar una base.");
-    return;
+    var pass = prompt("Contraseña de editor para importar base");
+    if (pass !== EDITOR_PASSWORD) {
+      alert("Contraseña incorrecta");
+      return;
+    }
+
+    state.isEditor = true;
+    renderEditorMode();
   }
 
   document.getElementById("importDataInput").value = "";
