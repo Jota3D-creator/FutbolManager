@@ -1,5 +1,16 @@
 var EDITOR_PASSWORD = "bosteros2026";
-var STORAGE_KEY = "bosteros_manager_data_v20_grouped_fine_sliders";
+var STORAGE_KEY = "bosteros_manager_data_v21_players_never_empty";
+
+var PREVIOUS_STORAGE_KEYS = [
+  "bosteros_manager_data_v20_grouped_fine_sliders",
+  "bosteros_manager_data_v19_tecnica_pase_15",
+  "bosteros_manager_data_v18_card_summary_6",
+  "bosteros_manager_data_v17_tactical_formations",
+  "bosteros_manager_data_v15_live_card_preview",
+  "bosteros_manager_data_v14_derived_summary",
+  "bosteros_manager_data_v13_save_regenerate",
+  "bosteros_manager_data_v12_base_players_fixed"
+];
 
 var defaultPlayers = [
   {
@@ -686,7 +697,7 @@ function rolePenaltyForTeam(indexes, candidateIndex) {
 }
 
 function cloneDefaultPlayers() {
-  var players = JSON.parse(JSON.stringify(defaultPlayers));
+  var players = JSON.parse(JSON.stringify(defaultPlayers || []));
   players.forEach(function(p) {
     p.status = "base";
   });
@@ -698,40 +709,66 @@ function hasValidPlayersList(players) {
 }
 
 
-function init() {
-  var saved = localStorage.getItem(STORAGE_KEY);
 
-  if (saved) {
+function loadSavedDataWithFallback() {
+  var keys = [STORAGE_KEY].concat(PREVIOUS_STORAGE_KEYS || []);
+
+  for (var i = 0; i < keys.length; i++) {
+    var raw = localStorage.getItem(keys[i]);
+    if (!raw) continue;
+
     try {
-      var parsed = JSON.parse(saved);
-
-      state.players = hasValidPlayersList(parsed.players) ? parsed.players : cloneDefaultPlayers();
-      state.match = parsed.match || state.match;
-      state.teams = parsed.teams || state.teams;
-
-      if (!state.teams) state.teams = { a: [], b: [], c: [], positions: {} };
-      if (!state.teams.a) state.teams.a = [];
-      if (!state.teams.b) state.teams.b = [];
-      if (!state.teams.c) state.teams.c = [];
-      if (!state.teams.positions) state.teams.positions = {};
-      if (!state.match.mode) state.match.mode = "normal";
-      if (!state.match.teamCColor) state.match.teamCColor = "white";
-      if (!state.match.formation) state.match.formation = "auto";
+      var parsed = JSON.parse(raw);
+      if (parsed && hasValidPlayersList(parsed.players)) {
+        return parsed;
+      }
     } catch (e) {
-      state.players = cloneDefaultPlayers();
-      state.teams = { a: [], b: [], c: [], positions: {} };
+      // keep looking
     }
-  } else {
-    state.players = cloneDefaultPlayers();
-    state.teams = { a: [], b: [], c: [], positions: {} };
-    saveData();
   }
 
+  return null;
+}
+
+function ensurePlayersNeverEmpty() {
   if (!hasValidPlayersList(state.players)) {
     state.players = cloneDefaultPlayers();
   }
 
+  state.players.forEach(function(p) {
+    if (!p.status) p.status = "base";
+    if (!p.photo) p.photo = "";
+    if (!p.posicionNatural) p.posicionNatural = "polivalente";
+  });
+
+  if (!state.teams) state.teams = { a: [], b: [], c: [], positions: {} };
+  if (!state.teams.a) state.teams.a = [];
+  if (!state.teams.b) state.teams.b = [];
+  if (!state.teams.c) state.teams.c = [];
+  if (!state.teams.positions) state.teams.positions = {};
+  if (!state.match) state.match = {};
+  if (!state.match.mode) state.match.mode = "normal";
+  if (!state.match.formation) state.match.formation = "auto";
+  if (!state.match.teamCColor) state.match.teamCColor = "white";
+}
+
+
+function init() {
+  var parsed = loadSavedDataWithFallback();
+
+  if (parsed) {
+    state.players = parsed.players;
+    state.match = parsed.match || state.match;
+    state.teams = parsed.teams || state.teams;
+  } else {
+    state.players = cloneDefaultPlayers();
+    state.teams = { a: [], b: [], c: [], positions: {} };
+  }
+
+  ensurePlayersNeverEmpty();
   normalizePlayers();
+  saveData();
+
   bindEvents();
   setNextWednesdayDate();
   renderAll();
@@ -883,7 +920,7 @@ function bindEvents() {
   bindButtonIfExists("regenerateFromPlayersBtn", regenerateFromPlayers);
   bindButtonIfExists("goTeamsFromPlayersBtn", function(){ showView("teams"); });
   bindButtonIfExists("applyRecommendedFormationBtn", applyRecommendedFormation);
-  document.getElementById("restoreDefaultPlayersBtn").addEventListener("click", restoreDefaultPlayers);
+  bindButtonIfExists("restoreDefaultPlayersBtn", restoreDefaultPlayers);
   document.getElementById("closePlayerModalBtn").addEventListener("click", closePlayerModal);
   document.getElementById("cancelPlayerBtn").addEventListener("click", closePlayerModal);
   document.getElementById("savePlayerBtn").addEventListener("click", savePlayerFromModal);
@@ -902,6 +939,7 @@ function bindEvents() {
   document.getElementById("importDataInput").addEventListener("change", importDatabaseFromFile);
 
   document.getElementById("restoreBasePlayersFromMatchBtn").addEventListener("click", restoreDefaultPlayers);
+  bindButtonIfExists("restoreBasePlayersFromMatchBtn", restoreDefaultPlayers);
   document.getElementById("selectAllForMatchBtn").addEventListener("click", selectAllForMatch);
   document.getElementById("clearMatchPlayersBtn").addEventListener("click", clearMatchPlayers);
   bindMatchDropZones();
@@ -1092,6 +1130,8 @@ function avatar(p) {
 }
 
 function renderDashboard() {
+  ensurePlayersNeverEmpty();
+
   if (!hasValidPlayersList(state.players)) {
     state.players = cloneDefaultPlayers();
     normalizePlayers();
@@ -1189,6 +1229,8 @@ function updateModalCardPreview() {
 
 
 function renderPlayers() {
+  ensurePlayersNeverEmpty();
+
   var grid = document.getElementById("playersGrid");
   if (!grid) return;
 
@@ -1203,6 +1245,8 @@ function renderPlayers() {
 }
 
 function renderCallList() {
+  ensurePlayersNeverEmpty();
+
   if (!hasValidPlayersList(state.players)) {
     state.players = cloneDefaultPlayers();
     state.players.forEach(function(p) { p.status = "base"; });

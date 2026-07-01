@@ -1292,3 +1292,11 @@ select option { background: #101926; }
   border-color: rgba(53,232,117,.24);
   background: rgba(53,232,117,.035);
 }
+
+
+/* v21: safety restore */
+#restoreDefaultPlayersBtn,
+#restoreBasePlayersFromMatchBtn {
+  border-color: rgba(255,212,59,.35);
+  color: var(--yellow);
+}
