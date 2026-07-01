@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fútbol 7 Manager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo">⚽</div>
+        <div>
+          <h1>FÚTBOL 7</h1>
+          <span>MANAGER</span>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <a class="active" href="#">Jugadores</a>
+        <a href="#teams">Equipos</a>
+        <a href="#stats">Estadísticas</a>
+        <a href="#ranking">Ranking</a>
+      </nav>
+
+      <div class="next-match">
+        <span>Próximo partido</span>
+        <strong>Miércoles</strong>
+        <p>21:30 hs</p>
+        <p>Cancha La Verde</p>
+        <button id="buildTeamsBtn">Armar equipos</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <h2>Jugadores</h2>
+          <p><span id="playerCount">14</span> jugadores registrados</p>
+        </div>
+        <div class="actions">
+          <button class="ghost">Exportar</button>
+          <button class="primary">+ Agregar jugador</button>
+        </div>
+      </header>
+
+      <section class="players-grid" id="playersGrid"></section>
+
+      <section class="dashboard-panels" id="stats">
+        <div class="panel wide">
+          <h3>Promedios del plantel</h3>
+          <div class="team-averages" id="teamAverages"></div>
+        </div>
+
+        <div class="panel">
+          <h3>Nivel general del plantel</h3>
+          <div class="general-level">
+            <div class="mini-ring" id="squadOverall">68</div>
+            <div>
+              <strong>Buen nivel</strong>
+              <p>El plantel tiene un buen equilibrio general.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="teams-section" id="teams">
+        <div class="section-title">
+          <h2>Equipos generados</h2>
+          <p>Balanceados según las 7 aptitudes.</p>
+        </div>
+
+        <div class="teams-grid">
+          <div class="team-card">
+            <h3>Equipo Verde</h3>
+            <div id="teamA"></div>
+            <div class="team-total" id="teamATotal"></div>
+          </div>
+
+          <div class="team-card">
+            <h3>Equipo Negro</h3>
+            <div id="teamB"></div>
+            <div class="team-total" id="teamBTotal"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
