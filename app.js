@@ -1,5 +1,5 @@
 var EDITOR_PASSWORD = "bosteros2026";
-var STORAGE_KEY = "bosteros_manager_data_v10_triangular";
+var STORAGE_KEY = "bosteros_manager_data_v11_fix_players";
 
 var defaultPlayers = [
   {
@@ -595,25 +595,46 @@ function rolePenaltyForTeam(indexes, candidateIndex) {
 }
 
 
+
+function cloneDefaultPlayers() {
+  return JSON.parse(JSON.stringify(defaultPlayers));
+}
+
+function hasValidPlayersList(players) {
+  return Array.isArray(players) && players.length > 0;
+}
+
+
 function init() {
   var saved = localStorage.getItem(STORAGE_KEY);
 
   if (saved) {
     try {
       var parsed = JSON.parse(saved);
-      state.players = parsed.players || defaultPlayers;
+
+      state.players = hasValidPlayersList(parsed.players) ? parsed.players : cloneDefaultPlayers();
       state.match = parsed.match || state.match;
       state.teams = parsed.teams || state.teams;
-      if (!state.teams.positions) state.teams.positions = {};
+
+      if (!state.teams) state.teams = { a: [], b: [], c: [], positions: {} };
+      if (!state.teams.a) state.teams.a = [];
+      if (!state.teams.b) state.teams.b = [];
       if (!state.teams.c) state.teams.c = [];
+      if (!state.teams.positions) state.teams.positions = {};
       if (!state.match.mode) state.match.mode = "normal";
       if (!state.match.teamCColor) state.match.teamCColor = "white";
     } catch (e) {
-      state.players = defaultPlayers;
+      state.players = cloneDefaultPlayers();
+      state.teams = { a: [], b: [], c: [], positions: {} };
     }
   } else {
-    state.players = defaultPlayers;
+    state.players = cloneDefaultPlayers();
+    state.teams = { a: [], b: [], c: [], positions: {} };
     saveData();
+  }
+
+  if (!hasValidPlayersList(state.players)) {
+    state.players = cloneDefaultPlayers();
   }
 
   normalizePlayers();
@@ -621,8 +642,6 @@ function init() {
   setNextWednesdayDate();
   renderAll();
 }
-
-
 
 function inferNaturalPosition(p) {
   var def = Number(p.defensa || 50) + Number(p.marca || 50) + Number(p.entrada || 50);
@@ -710,6 +729,7 @@ function bindEvents() {
 
   document.getElementById("openPlayerModalBtn").addEventListener("click", function(){ openPlayerModal(); });
   document.getElementById("openPlayerModalBtn2").addEventListener("click", function(){ openPlayerModal(); });
+  document.getElementById("restoreDefaultPlayersBtn").addEventListener("click", restoreDefaultPlayers);
   document.getElementById("closePlayerModalBtn").addEventListener("click", closePlayerModal);
   document.getElementById("cancelPlayerBtn").addEventListener("click", closePlayerModal);
   document.getElementById("savePlayerBtn").addEventListener("click", savePlayerFromModal);
@@ -731,6 +751,24 @@ function bindEvents() {
   document.getElementById("clearMatchPlayersBtn").addEventListener("click", clearMatchPlayers);
   bindMatchDropZones();
 }
+
+
+function restoreDefaultPlayers() {
+  if (!state.isEditor) {
+    alert("Necesitás activar modo editor");
+    return;
+  }
+
+  var ok = confirm("¿Restaurar los jugadores base? Esto reemplaza la lista actual y borra equipos generados.");
+  if (!ok) return;
+
+  state.players = cloneDefaultPlayers();
+  state.teams = { a: [], b: [], c: [], positions: {} };
+  saveData();
+  renderAll();
+  alert("Jugadores base restaurados.");
+}
+
 
 function showView(id) {
   document.querySelectorAll(".view").forEach(function(view) { view.classList.remove("active"); });
@@ -839,6 +877,11 @@ function avatar(p) {
 }
 
 function renderDashboard() {
+  if (!hasValidPlayersList(state.players)) {
+    state.players = cloneDefaultPlayers();
+    normalizePlayers();
+  }
+
   var confirmed = state.players.filter(function(p){ return p.status === "confirmed"; }).length;
   var maybe = state.players.length - confirmed;
   var out = (state.teams.a || []).length + (state.teams.b || []).length + (state.teams.c || []).length;
@@ -909,7 +952,15 @@ function playerCardHTML(p, i, editable) {
 }
 
 function renderPlayers() {
-  document.getElementById("playersGrid").innerHTML = state.players.map(function(p, i) {
+  var grid = document.getElementById("playersGrid");
+  if (!grid) return;
+
+  if (!hasValidPlayersList(state.players)) {
+    state.players = cloneDefaultPlayers();
+    normalizePlayers();
+  }
+
+  grid.innerHTML = state.players.map(function(p, i) {
     return playerCardHTML(p, i, true);
   }).join("");
 }
