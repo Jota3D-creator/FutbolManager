@@ -642,6 +642,9 @@ function bindEvents() {
   document.getElementById("shareTeamsBtn").addEventListener("click", showShareText);
   document.getElementById("copyShareBtn").addEventListener("click", copyShareText);
   document.getElementById("saveMatchBtn").addEventListener("click", saveMatchFromForm);
+  document.getElementById("exportDataBtn").addEventListener("click", exportDatabase);
+  document.getElementById("importDataBtn").addEventListener("click", triggerImportDatabase);
+  document.getElementById("importDataInput").addEventListener("change", importDatabaseFromFile);
 }
 
 function showView(id) {
@@ -1313,5 +1316,90 @@ function copyShareText() {
     alert("No se pudo copiar automáticamente. Copialo manualmente del cuadro.");
   });
 }
+
+
+function exportDatabase() {
+  var payload = {
+    app: "Los Bosteros Futbol 7 Manager",
+    version: 6,
+    exportedAt: new Date().toISOString(),
+    data: {
+      players: state.players,
+      teams: state.teams,
+      match: state.match
+    }
+  };
+
+  var json = JSON.stringify(payload, null, 2);
+  var blob = new Blob([json], { type: "application/json" });
+  var url = URL.createObjectURL(blob);
+
+  var date = new Date().toISOString().slice(0, 10);
+  var link = document.createElement("a");
+  link.href = url;
+  link.download = "los-bosteros-base-" + date + ".json";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  URL.revokeObjectURL(url);
+}
+
+function triggerImportDatabase() {
+  if (!state.isEditor) {
+    alert("Necesitás activar modo editor para importar una base.");
+    return;
+  }
+
+  document.getElementById("importDataInput").value = "";
+  document.getElementById("importDataInput").click();
+}
+
+function importDatabaseFromFile(event) {
+  if (!state.isEditor) {
+    alert("Necesitás activar modo editor para importar una base.");
+    return;
+  }
+
+  var file = event.target.files[0];
+  if (!file) return;
+
+  var reader = new FileReader();
+
+  reader.onload = function(e) {
+    try {
+      var parsed = JSON.parse(e.target.result);
+      var data = parsed.data || parsed;
+
+      if (!data.players || !Array.isArray(data.players)) {
+        alert("El archivo no parece ser una base válida.");
+        return;
+      }
+
+      var ok = confirm("¿Importar esta base? Esto reemplaza jugadores, partido y equipos guardados en este navegador.");
+      if (!ok) return;
+
+      state.players = data.players;
+      state.match = data.match || state.match;
+      state.teams = data.teams || { a: [], b: [], positions: {} };
+
+      if (!state.teams.positions) {
+        state.teams.positions = {};
+      }
+
+      normalizePlayers();
+      saveData();
+      renderAll();
+
+      alert("Base importada correctamente.");
+    } catch (error) {
+      console.error(error);
+      alert("No se pudo leer el archivo JSON.");
+    }
+  };
+
+  reader.readAsText(file);
+}
+
 
 init();

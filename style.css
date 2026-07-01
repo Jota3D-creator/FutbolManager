@@ -826,3 +826,18 @@ select option { background: #101926; }
     font-size: 20px;
   }
 }
+
+/* v6 export/import */
+.top-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+@media (max-width: 760px) {
+  .top-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+}

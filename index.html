@@ -38,7 +38,12 @@
           <h2 id="viewTitle">Dashboard</h2>
           <p id="viewSubtitle">Próximo partido, cancha y jugadores.</p>
         </div>
-        <button class="primary-btn editor-only hidden" id="openPlayerModalBtn">+ Nuevo jugador</button>
+        <div class="top-actions">
+          <button class="ghost-btn" id="exportDataBtn">Exportar base</button>
+          <button class="ghost-btn editor-only hidden" id="importDataBtn">Importar base</button>
+          <input id="importDataInput" type="file" accept="application/json,.json" class="hidden" />
+          <button class="primary-btn editor-only hidden" id="openPlayerModalBtn">+ Nuevo jugador</button>
+        </div>
       </header>
 
       <section id="dashboard" class="view active">
