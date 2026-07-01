@@ -129,9 +129,12 @@
         <div class="section-head">
           <div>
             <h3>Base de jugadores</h3>
-            <p>Stats, fotos y edición del plantel.</p>
+            <p>Stats, fotos y edición del plantel.</p><small id="playersSaveStatus" class="save-status">Cambios guardados localmente</small>
           </div>
           <div class="teams-actions editor-only hidden">
+            <button class="ghost-btn" id="savePlayersBtn">Guardar cambios</button>
+            <button class="ghost-btn" id="regenerateFromPlayersBtn">Regenerar equipos</button>
+            <button class="ghost-btn" id="goTeamsFromPlayersBtn">Ver equipos</button>
             <button class="ghost-btn" id="restoreDefaultPlayersBtn">Restaurar jugadores base</button>
             <button class="primary-btn" id="openPlayerModalBtn2">+ Nuevo jugador</button>
           </div>

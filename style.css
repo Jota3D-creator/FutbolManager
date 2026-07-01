@@ -1074,3 +1074,25 @@ select option { background: #101926; }
     grid-template-columns: 1fr;
   }
 }
+
+
+/* v13 save/regenerate workflow */
+.save-status {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.save-status.dirty {
+  color: var(--yellow);
+}
+
+.save-status.saved {
+  color: var(--green);
+}
+
+.player-card.changed {
+  outline: 1px solid rgba(255,212,59,.45);
+  box-shadow: 0 0 22px rgba(255,212,59,.08);
+}

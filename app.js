@@ -1,5 +1,5 @@
 var EDITOR_PASSWORD = "bosteros2026";
-var STORAGE_KEY = "bosteros_manager_data_v12_base_players_fixed";
+var STORAGE_KEY = "bosteros_manager_data_v13_save_regenerate";
 
 var defaultPlayers = [
   {
@@ -539,6 +539,8 @@ var categoryConfig = [
   ["Mental", ["inteligencia", "calma", "disciplina", "intensidad", "compromiso"]]
 ];
 
+var playersDirty = false;
+
 var colorLabel = {
   yellow: "Boca amarilla",
   blue: "Boca azul",
@@ -719,6 +721,13 @@ function saveData() {
   }
 }
 
+
+function bindButtonIfExists(id, callback) {
+  var el = document.getElementById(id);
+  if (el) el.addEventListener("click", callback);
+}
+
+
 function bindEvents() {
   document.querySelectorAll(".nav-btn").forEach(function(btn) {
     btn.addEventListener("click", function() { showView(btn.dataset.view); });
@@ -733,6 +742,9 @@ function bindEvents() {
 
   document.getElementById("openPlayerModalBtn").addEventListener("click", function(){ openPlayerModal(); });
   document.getElementById("openPlayerModalBtn2").addEventListener("click", function(){ openPlayerModal(); });
+  bindButtonIfExists("savePlayersBtn", savePlayersManually);
+  bindButtonIfExists("regenerateFromPlayersBtn", regenerateFromPlayers);
+  bindButtonIfExists("goTeamsFromPlayersBtn", function(){ showView("teams"); });
   document.getElementById("restoreDefaultPlayersBtn").addEventListener("click", restoreDefaultPlayers);
   document.getElementById("closePlayerModalBtn").addEventListener("click", closePlayerModal);
   document.getElementById("cancelPlayerBtn").addEventListener("click", closePlayerModal);
@@ -758,6 +770,61 @@ function bindEvents() {
 }
 
 
+
+function setPlayersDirty(isDirty) {
+  playersDirty = !!isDirty;
+
+  var status = document.getElementById("playersSaveStatus");
+  if (!status) return;
+
+  status.classList.toggle("dirty", playersDirty);
+  status.classList.toggle("saved", !playersDirty);
+  status.textContent = playersDirty ? "Hay cambios sin confirmar. Guardá o regenerá equipos." : "Cambios guardados localmente";
+}
+
+function savePlayersManually() {
+  if (!state.isEditor) {
+    alert("Necesitás activar modo editor");
+    return;
+  }
+
+  saveData();
+  setPlayersDirty(false);
+  renderDashboard();
+  renderTeams();
+  alert("Cambios de jugadores guardados.");
+}
+
+function regenerateFromPlayers() {
+  if (!state.isEditor) {
+    alert("Necesitás activar modo editor");
+    return;
+  }
+
+  var selected = state.players.filter(function(p) {
+    return p.status === "confirmed";
+  }).length;
+
+  var needed = isTriangular() ? 3 : 2;
+
+  if (selected < needed) {
+    alert("Primero agregá al menos " + needed + " jugadores al partido.");
+    showView("match");
+    return;
+  }
+
+  saveData();
+  setPlayersDirty(false);
+
+  if ((state.teams.a || []).length || (state.teams.b || []).length || (state.teams.c || []).length) {
+    var ok = confirm("¿Regenerar equipos usando los cambios guardados?");
+    if (!ok) return;
+  }
+
+  makeTeams(true);
+}
+
+
 function restoreDefaultPlayers() {
   if (!state.isEditor) {
     alert("Necesitás activar modo editor");
@@ -770,6 +837,7 @@ function restoreDefaultPlayers() {
   state.players = cloneDefaultPlayers();
   state.teams = { a: [], b: [], c: [], positions: {} };
   saveData();
+  setPlayersDirty(false);
   renderAll();
   alert("Jugadores base restaurados.");
 }
@@ -825,6 +893,7 @@ function renderEditorMode() {
   renderPlayers();
   renderCallList();
   renderTeams();
+  setPlayersDirty(playersDirty);
 }
 
 function setNextWednesdayDate() {
@@ -1272,7 +1341,9 @@ function updateModalOverallPreview() {
 
 function fillModal(p) {
   document.getElementById("playerName").value = p.name;
+  document.getElementById("playerName").addEventListener("input", function(){ setPlayersDirty(true); });
   document.getElementById("posicionNatural").value = p.posicionNatural || "polivalente";
+  document.getElementById("posicionNatural").addEventListener("change", function(){ setPlayersDirty(true); });
   renderStatsEditor(p);
   updateModalOverallPreview();
 
@@ -1316,6 +1387,7 @@ function handlePhotoInput(e) {
       var preview = document.getElementById("photoPreview");
       preview.dataset.photo = data;
       preview.innerHTML = '<img src="' + data + '">';
+      setPlayersDirty(true);
     };
     img.src = event.target.result;
   };
@@ -1351,6 +1423,7 @@ function savePlayerFromModal() {
   }
 
   saveData();
+  setPlayersDirty(false);
   closePlayerModal();
   renderAll();
 }
@@ -1565,6 +1638,21 @@ function renderTeamCompare(id, indexes) {
     return '<div class="compare-row"><span>' + label + '</span><div class="bar"><i style="--w:' + value + '%;--c:#35e875"></i></div><b>' + value + '</b></div>';
   }).join("");
 }
+
+function bindStatsEditorDirtyState() {
+  var container = document.getElementById("statsEditor");
+  if (!container) return;
+
+  container.querySelectorAll("input, select").forEach(function(input) {
+    input.addEventListener("input", function() {
+      setPlayersDirty(true);
+    });
+    input.addEventListener("change", function() {
+      setPlayersDirty(true);
+    });
+  });
+}
+
 
 function renderDashboardPitch() {
   var labelA = colorLabel[state.match.teamAColor] || "Equipo A";
