@@ -1,5 +1,5 @@
 var EDITOR_PASSWORD = "bosteros2026";
-var STORAGE_KEY = "bosteros_manager_data_v19_tecnica_pase_15";
+var STORAGE_KEY = "bosteros_manager_data_v20_grouped_fine_sliders";
 
 var defaultPlayers = [
   {
@@ -535,39 +535,54 @@ var summaryStatKeys = summaryConfig.map(function(item) {
 
 var statGroups = [
   {
-    title: "Técnicos",
+    title: "Técnica",
     stats: [
       ["control", "Control", "#35e875"],
-      ["tecnicaBase", "Técnica individual", "#35e875"],
+      ["regate", "Regate", "#35e875"],
+      ["tecnicaBase", "Técnica individual", "#35e875"]
+    ]
+  },
+  {
+    title: "Pase",
+    stats: [
       ["passing", "Pase", "#4ca8ff"],
+      ["juegoEquipo", "Juego en equipo", "#4ca8ff"]
+    ]
+  },
+  {
+    title: "Tiro",
+    stats: [
       ["finishing", "Definición", "#ffd43b"],
+      ["tiroLargo", "Tiro largo", "#ffd43b"],
+      ["calma", "Calma", "#ffd43b"],
+      ["movimientoSinPelota", "Movimiento sin pelota", "#ffd43b"]
+    ]
+  },
+  {
+    title: "Defensa",
+    stats: [
       ["entrada", "Entrada / Tacle", "#ff5353"],
-      ["marca", "Marca", "#ff7a7a"],
-      ["regate", "Regate", "#4ca8ff"],
-      ["tiroLargo", "Tiro largo", "#ffd43b"]
+      ["marca", "Marca", "#ff5353"],
+      ["anticipacion", "Anticipación", "#ff5353"],
+      ["disciplina", "Disciplina", "#ff5353"]
     ]
   },
   {
-    title: "Mentales",
+    title: "Físico",
     stats: [
-      ["anticipacion", "Anticipación", "#32d4d9"],
-      ["calma", "Calma", "#8be9fd"],
-      ["decisiones", "Decisiones", "#35e875"],
-      ["disciplina", "Disciplina", "#ff5bae"],
-      ["intensidad", "Intensidad", "#ffd43b"],
-      ["juegoEquipo", "Juego en equipo", "#4ca8ff"],
-      ["movimientoSinPelota", "Movimiento sin pelota", "#9c6bff"],
-      ["visionJuego", "Visión de juego", "#32d4d9"]
+      ["aceleracion", "Aceleración", "#9c6bff"],
+      ["agilidad", "Agilidad", "#9c6bff"],
+      ["fuerza", "Fuerza", "#9c6bff"],
+      ["resistencia", "Resistencia", "#9c6bff"],
+      ["velocidad", "Velocidad", "#9c6bff"],
+      ["intensidad", "Intensidad", "#9c6bff"]
     ]
   },
   {
-    title: "Físicos",
+    title: "Visión",
     stats: [
-      ["aceleracion", "Aceleración", "#35e875"],
-      ["agilidad", "Agilidad", "#4ca8ff"],
-      ["fuerza", "Fuerza", "#ff5353"],
-      ["resistencia", "Resistencia", "#ffd43b"],
-      ["velocidad", "Velocidad", "#9c6bff"]
+      ["visionJuego", "Visión de juego", "#32d4d9"],
+      ["decisiones", "Decisiones", "#32d4d9"]
     ]
   },
   {
@@ -577,6 +592,17 @@ var statGroups = [
     ]
   }
 ];
+
+
+var statGroupNotes = {
+  "Técnica": "Afectan principalmente el resumen Técnica.",
+  "Pase": "Afectan principalmente el resumen Pase.",
+  "Tiro": "Afectan principalmente el resumen Tiro.",
+  "Defensa": "Afectan principalmente el resumen Defensa.",
+  "Físico": "Afectan principalmente el resumen Físico.",
+  "Visión": "Afectan principalmente el resumen Visión.",
+  "Especial": "Atributo separado para futuros arqueros."
+};
 
 var statConfig = statGroups.reduce(function(list, group) {
   return list.concat(group.stats);
@@ -1458,6 +1484,7 @@ function renderStatsEditor(p) {
 
     return '<details class="stat-section"' + open + '>' +
       '<summary>' + group.title + '</summary>' +
+      '<div class="summary-help">' + (statGroupNotes[group.title] || "") + '</div>' +
       '<div class="slider-list">' +
       group.stats.map(function(stat) {
         var key = stat[0];
