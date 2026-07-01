@@ -1,5 +1,5 @@
 var EDITOR_PASSWORD = "bosteros2026";
-var STORAGE_KEY = "bosteros_manager_data_v21_players_never_empty";
+var STORAGE_KEY = "bosteros_manager_data_v22_fix_render_players";
 
 var PREVIOUS_STORAGE_KEYS = [
   "bosteros_manager_data_v20_grouped_fine_sliders",
@@ -654,6 +654,155 @@ var positionLabel = {
   delantero: "Delantero"
 };
 
+
+function displayPosition(p) {
+  return (p && p.posicionNatural) ? p.posicionNatural : "polivalente";
+}
+
+function displayPositionLabel(p) {
+  return positionLabel[displayPosition(p)] || "Polivalente";
+}
+
+function playerLineRole(p) {
+  var pos = displayPosition(p);
+
+  if (pos === "arquero") return "arquero";
+  if (pos === "defensa" || pos === "lateral") return "defensa";
+  if (pos === "mediocampo" || pos === "polivalente") return "medio";
+  if (pos === "extremo" || pos === "delantero") return "ataque";
+
+  return "medio";
+}
+
+function countRoles(indexes) {
+  var counts = { arquero: 0, defensa: 0, medio: 0, ataque: 0 };
+
+  (indexes || []).forEach(function(index) {
+    var p = state.players[index];
+    counts[playerLineRole(p)] += 1;
+  });
+
+  return counts;
+}
+
+function getConfirmedIndexes() {
+  return state.players
+    .map(function(p, index) { return { player: p, index: index }; })
+    .filter(function(item) { return item.player.status === "confirmed"; })
+    .map(function(item) { return item.index; });
+}
+
+function recommendFormationForIndexes(indexes) {
+  var counts = countRoles(indexes || []);
+
+  if (counts.defensa >= 5 && counts.ataque <= 3) {
+    return {
+      id: "3-2-1",
+      title: "3-2-1",
+      reason: "Hay bastante perfil defensivo. Conviene un bloque sólido, con salida rápida y menos riesgo atrás."
+    };
+  }
+
+  if (counts.ataque >= 4 && counts.defensa >= 2) {
+    return {
+      id: "1-2-2-2",
+      title: "1-2-2-2",
+      reason: "Hay varios jugadores ofensivos. Sirve para presión alta, juego directo y buscar goles rápido."
+    };
+  }
+
+  if (counts.medio >= 4) {
+    return {
+      id: "1-2-3-1",
+      title: "1-2-3-1",
+      reason: "Hay buen volumen de medios. Es el sistema más equilibrado para controlar el partido."
+    };
+  }
+
+  return {
+    id: "1-2-3-1",
+    title: "1-2-3-1",
+    reason: "Es la opción más equilibrada entre defensa, medio y ataque para Fútbol 7."
+  };
+}
+
+function activeFormationId() {
+  var selected = (state.match && state.match.formation) ? state.match.formation : "auto";
+
+  if (selected !== "auto") {
+    return selected;
+  }
+
+  return recommendFormationForIndexes(getConfirmedIndexes()).id;
+}
+
+function formationDescription(id) {
+  if (id === "3-2-1") {
+    return "Fortaleza defensiva y contragolpe. Tres atrás, dos medios y un punta.";
+  }
+
+  if (id === "1-2-2-2") {
+    return "Presión alta y juego directo. Dos defensas, dos medios y dos delanteros.";
+  }
+
+  return "Equilibrio total. Dos defensas, tres medios y un delantero.";
+}
+
+function renderTacticalRecommendation() {
+  var el = document.getElementById("formationRecommendation");
+  if (!el) return;
+
+  var indexes = getConfirmedIndexes();
+  var rec = recommendFormationForIndexes(indexes);
+  var active = activeFormationId();
+  var modeText = state.match.formation === "auto" ? "recomendada" : "elegida manualmente";
+
+  el.innerHTML =
+    '<span class="formation-pill">' + active + '</span>' +
+    '<strong>Formación ' + modeText + '.</strong> ' +
+    formationDescription(active) +
+    '<br><span class="muted">' + rec.reason + '</span>';
+}
+
+function applyRecommendedFormation() {
+  if (!state.isEditor) {
+    alert("Necesitás activar modo editor");
+    return;
+  }
+
+  var rec = recommendFormationForIndexes(getConfirmedIndexes());
+  state.match.formation = rec.id;
+
+  var selector = document.getElementById("matchFormation");
+  if (selector) selector.value = rec.id;
+
+  saveData();
+  renderTacticalRecommendation();
+  alert("Formación recomendada aplicada: " + rec.id);
+}
+
+function sortedForRole(indexes, role) {
+  return (indexes || [])
+    .filter(function(index) {
+      return playerLineRole(state.players[index]) === role;
+    })
+    .sort(function(a, b) {
+      return overall(state.players[b]) - overall(state.players[a]);
+    });
+}
+
+function sortIndexesForFormation(indexes) {
+  var roles = ["arquero", "defensa", "medio", "ataque"];
+  var sorted = [];
+
+  roles.forEach(function(role) {
+    sorted = sorted.concat(sortedForRole(indexes || [], role));
+  });
+
+  return sorted;
+}
+
+
 function positionGroup(pos) {
   if (pos === "arquero") return "arquero";
   if (pos === "defensa" || pos === "lateral") return "defensa";
@@ -753,7 +902,26 @@ function ensurePlayersNeverEmpty() {
 }
 
 
+
+function safeInitRenderFallback(error) {
+  console.error("Init fallback:", error);
+
+  state.players = cloneDefaultPlayers();
+  state.teams = { a: [], b: [], c: [], positions: {} };
+  ensurePlayersNeverEmpty();
+  normalizePlayers();
+  saveData();
+
+  try {
+    renderAll();
+  } catch (renderError) {
+    console.error("Render fallback failed:", renderError);
+  }
+}
+
+
 function init() {
+  try {
   var parsed = loadSavedDataWithFallback();
 
   if (parsed) {
@@ -772,6 +940,10 @@ function init() {
   bindEvents();
   setNextWednesdayDate();
   renderAll();
+
+  } catch (error) {
+    safeInitRenderFallback(error);
+  }
 }
 
 
@@ -901,6 +1073,11 @@ function bindButtonIfExists(id, callback) {
   if (el) el.addEventListener("click", callback);
 }
 
+function bindInputIfExists(id, eventName, callback) {
+  var el = document.getElementById(id);
+  if (el) el.addEventListener(eventName, callback);
+}
+
 
 function bindEvents() {
   document.querySelectorAll(".nav-btn").forEach(function(btn) {
@@ -911,37 +1088,37 @@ function bindEvents() {
     btn.addEventListener("click", function() { showView(btn.dataset.viewTarget); });
   });
 
-  document.getElementById("editorBtn").addEventListener("click", unlockEditor);
-  document.getElementById("logoutEditorBtn").addEventListener("click", lockEditor);
+  bindButtonIfExists("editorBtn", unlockEditor);
+  bindButtonIfExists("logoutEditorBtn", lockEditor);
 
-  document.getElementById("openPlayerModalBtn").addEventListener("click", function(){ openPlayerModal(); });
-  document.getElementById("openPlayerModalBtn2").addEventListener("click", function(){ openPlayerModal(); });
+  bindButtonIfExists("openPlayerModalBtn", function(){ openPlayerModal(); });
+  bindButtonIfExists("openPlayerModalBtn2", function(){ openPlayerModal(); });
   bindButtonIfExists("savePlayersBtn", savePlayersManually);
   bindButtonIfExists("regenerateFromPlayersBtn", regenerateFromPlayers);
   bindButtonIfExists("goTeamsFromPlayersBtn", function(){ showView("teams"); });
   bindButtonIfExists("applyRecommendedFormationBtn", applyRecommendedFormation);
   bindButtonIfExists("restoreDefaultPlayersBtn", restoreDefaultPlayers);
-  document.getElementById("closePlayerModalBtn").addEventListener("click", closePlayerModal);
-  document.getElementById("cancelPlayerBtn").addEventListener("click", closePlayerModal);
-  document.getElementById("savePlayerBtn").addEventListener("click", savePlayerFromModal);
-  document.getElementById("playerPhoto").addEventListener("change", handlePhotoInput);
-  document.getElementById("playerName").addEventListener("input", updateModalOverallPreview);
+  bindButtonIfExists("closePlayerModalBtn", closePlayerModal);
+  bindButtonIfExists("cancelPlayerBtn", closePlayerModal);
+  bindButtonIfExists("savePlayerBtn", savePlayerFromModal);
+  bindInputIfExists("playerPhoto", "change", handlePhotoInput);
+  bindInputIfExists("playerName", "input", updateModalOverallPreview);
 
-  document.getElementById("quickGenerateBtn").addEventListener("click", generateTeams);
-  document.getElementById("generateTeamsBtn").addEventListener("click", generateTeams);
-  document.getElementById("regenerateTeamsBtn").addEventListener("click", regenerateTeams);
-  document.getElementById("resetTeamsBtn").addEventListener("click", resetTeams);
-  document.getElementById("shareTeamsBtn").addEventListener("click", showShareText);
-  document.getElementById("copyShareBtn").addEventListener("click", copyShareText);
-  document.getElementById("saveMatchBtn").addEventListener("click", saveMatchFromForm);
-  document.getElementById("exportDataBtn").addEventListener("click", exportDatabase);
-  document.getElementById("importDataBtn").addEventListener("click", triggerImportDatabase);
-  document.getElementById("importDataInput").addEventListener("change", importDatabaseFromFile);
+  bindButtonIfExists("quickGenerateBtn", generateTeams);
+  bindButtonIfExists("generateTeamsBtn", generateTeams);
+  bindButtonIfExists("regenerateTeamsBtn", regenerateTeams);
+  bindButtonIfExists("resetTeamsBtn", resetTeams);
+  bindButtonIfExists("shareTeamsBtn", showShareText);
+  bindButtonIfExists("copyShareBtn", copyShareText);
+  bindButtonIfExists("saveMatchBtn", saveMatchFromForm);
+  bindButtonIfExists("exportDataBtn", exportDatabase);
+  bindButtonIfExists("importDataBtn", triggerImportDatabase);
+  bindInputIfExists("importDataInput", "change", importDatabaseFromFile);
 
-  document.getElementById("restoreBasePlayersFromMatchBtn").addEventListener("click", restoreDefaultPlayers);
   bindButtonIfExists("restoreBasePlayersFromMatchBtn", restoreDefaultPlayers);
-  document.getElementById("selectAllForMatchBtn").addEventListener("click", selectAllForMatch);
-  document.getElementById("clearMatchPlayersBtn").addEventListener("click", clearMatchPlayers);
+  bindButtonIfExists("restoreBasePlayersFromMatchBtn", restoreDefaultPlayers);
+  bindButtonIfExists("selectAllForMatchBtn", selectAllForMatch);
+  bindButtonIfExists("clearMatchPlayersBtn", clearMatchPlayers);
   bindMatchDropZones();
 }
 
