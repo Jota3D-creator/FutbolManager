@@ -1031,3 +1031,46 @@ select option { background: #101926; }
     width: 100%;
   }
 }
+
+
+/* v12 triangular alignment */
+.teams-summary.triangular-grid {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.team-comparison.triangular-grid,
+.teams-list.triangular-grid {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.pitch.triangular-mode {
+  background:
+    linear-gradient(90deg, rgba(255,212,59,.07) 0 33.333%, rgba(76,168,255,.07) 33.333% 66.666%, rgba(255,255,255,.07) 66.666% 100%),
+    repeating-linear-gradient(0deg, rgba(36,130,48,.95), rgba(36,130,48,.95) 44px, rgba(30,110,42,.95) 44px, rgba(30,110,42,.95) 88px);
+}
+
+.pitch.triangular-mode:before,
+.pitch.triangular-mode:after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: rgba(255,255,255,.22);
+  z-index: 0;
+}
+
+.pitch.triangular-mode:before { left: 33.333%; }
+.pitch.triangular-mode:after { left: 66.666%; }
+
+.pitch-player.team-c .avatar {
+  box-shadow: 0 0 0 3px rgba(255,255,255,.75);
+}
+
+@media (max-width: 1200px) {
+  .teams-summary.triangular-grid,
+  .team-comparison.triangular-grid,
+  .teams-list.triangular-grid {
+    grid-template-columns: 1fr;
+  }
+}

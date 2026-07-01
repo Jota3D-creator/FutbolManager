@@ -104,6 +104,7 @@
           <div class="team-tabs compact-tabs">
             <div id="dashboardTeamALabel" class="shirt-tag yellow">Boca amarilla</div>
             <div id="dashboardTeamBLabel" class="shirt-tag blue">Boca azul</div>
+            <div id="dashboardTeamCLabel" class="shirt-tag white triangular-only hidden">Boca blanca</div>
           </div>
           <div class="pitch pitch-dashboard">
             <div class="half-line"></div>
@@ -144,6 +145,12 @@
             <h3>Datos del partido</h3>
 
             <div class="form-grid">
+              <label>Tipo de partido
+                <select id="matchMode" disabled>
+                  <option value="normal">Normal, 2 equipos</option>
+                  <option value="triangular">Triangular, 3 equipos</option>
+                </select>
+              </label>
               <label>Día
                 <input id="matchDay" type="text" value="Miércoles" disabled />
               </label>
@@ -181,6 +188,13 @@
                   <option value="white">Boca blanca</option>
                 </select>
               </label>
+              <label id="teamCColorField" class="triangular-only hidden">Camiseta Equipo C
+                <select id="teamCColor" disabled>
+                  <option value="white">Boca blanca</option>
+                  <option value="yellow">Boca amarilla</option>
+                  <option value="blue">Boca azul</option>
+                </select>
+              </label>
             </div>
 
             <button class="primary-btn editor-only hidden" id="saveMatchBtn">Guardar datos</button>
@@ -193,6 +207,7 @@
                 <p class="muted">Arrastrá desde la base al partido. También podés usar los botones en celular.</p>
               </div>
               <div class="teams-actions editor-only hidden">
+                <button class="ghost-btn" id="restoreBasePlayersFromMatchBtn">Cargar 14 base</button>
                 <button class="ghost-btn" id="selectAllForMatchBtn">Agregar todos</button>
                 <button class="danger-btn" id="clearMatchPlayersBtn">Vaciar partido</button>
               </div>
@@ -233,16 +248,18 @@
           </div>
         </div>
 
-        <div class="teams-summary">
+        <div class="teams-summary" id="teamsSummary">
           <div class="panel small-summary"><span>Equipo A</span><strong id="teamAAvg">0 OVR</strong></div>
           <div class="panel small-summary"><span>Equilibrio</span><strong id="balanceScore">0%</strong></div>
           <div class="panel small-summary"><span>Equipo B</span><strong id="teamBAvg">0 OVR</strong></div>
+          <div class="panel small-summary triangular-only hidden"><span>Equipo C</span><strong id="teamCAvg">0 OVR</strong></div>
         </div>
 
         <div class="pitch-panel panel">
           <div class="team-tabs">
             <div id="teamALabel" class="shirt-tag yellow">Boca amarilla</div>
             <div id="teamBLabel" class="shirt-tag blue">Boca azul</div>
+            <div id="teamCLabel" class="shirt-tag white triangular-only hidden">Boca blanca</div>
           </div>
 
           <div class="pitch pitch-main" id="mainPitch">
@@ -254,7 +271,7 @@
           </div>
         </div>
 
-        <div class="team-comparison">
+        <div class="team-comparison" id="teamComparisonGrid">
           <article class="panel">
             <h3 id="teamACompareTitle">Equipo A</h3>
             <div id="teamACompare"></div>
@@ -263,9 +280,13 @@
             <h3 id="teamBCompareTitle">Equipo B</h3>
             <div id="teamBCompare"></div>
           </article>
+          <article class="panel triangular-only hidden">
+            <h3 id="teamCCompareTitle">Equipo C</h3>
+            <div id="teamCCompare"></div>
+          </article>
         </div>
 
-        <div class="teams-list">
+        <div class="teams-list" id="teamsListGrid">
           <article class="panel">
             <h3 id="teamAListTitle">Equipo A</h3>
             <div id="teamAList"></div>
@@ -273,6 +294,10 @@
           <article class="panel">
             <h3 id="teamBListTitle">Equipo B</h3>
             <div id="teamBList"></div>
+          </article>
+          <article class="panel triangular-only hidden">
+            <h3 id="teamCListTitle">Equipo C</h3>
+            <div id="teamCList"></div>
           </article>
         </div>
 
@@ -307,6 +332,18 @@
         <div class="form-area">
           <label>Nombre
             <input id="playerName" type="text" placeholder="Ej: Flego" />
+          </label>
+
+          <label>Posición natural
+            <select id="posicionNatural">
+              <option value="polivalente">Polivalente</option>
+              <option value="arquero">Arquero</option>
+              <option value="defensa">Defensa</option>
+              <option value="lateral">Lateral</option>
+              <option value="mediocampo">Mediocampo</option>
+              <option value="extremo">Extremo</option>
+              <option value="delantero">Delantero</option>
+            </select>
           </label>
 
           <div class="modal-overall">
