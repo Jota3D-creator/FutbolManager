@@ -73,15 +73,15 @@
           </article>
 
           <article class="panel stat-card warning">
-            <span>En duda</span>
+            <span>No elegidos</span>
             <strong id="maybeCount">0</strong>
-            <small>Pendientes</small>
+            <small>Siguen en la base</small>
           </article>
 
           <article class="panel stat-card danger">
-            <span>No vienen</span>
+            <span>En equipos</span>
             <strong id="outCount">0</strong>
-            <small>No disponibles</small>
+            <small>Ya asignados</small>
           </article>
 
           <article class="panel money-card">
@@ -183,10 +183,35 @@
             <button class="primary-btn editor-only hidden" id="saveMatchBtn">Guardar datos</button>
           </article>
 
-          <article class="panel">
-            <h3>Convocados</h3>
-            <p class="muted">Confirmado, duda o no viene. Solo los confirmados entran en el armado de equipos.</p>
-            <div id="callList" class="call-list"></div>
+          <article class="panel match-builder-panel">
+            <div class="section-head compact-section-head">
+              <div>
+                <h3>Jugadores para partido</h3>
+                <p class="muted">Arrastrá desde la base al partido. También podés usar los botones en celular.</p>
+              </div>
+              <div class="teams-actions editor-only hidden">
+                <button class="ghost-btn" id="selectAllForMatchBtn">Agregar todos</button>
+                <button class="danger-btn" id="clearMatchPlayersBtn">Vaciar partido</button>
+              </div>
+            </div>
+
+            <div class="match-drag-board">
+              <div class="drop-zone" id="basePlayersZone" data-match-zone="base">
+                <div class="drop-zone-head">
+                  <h4>Base de jugadores</h4>
+                  <span id="basePlayersCount">0</span>
+                </div>
+                <div id="basePlayersList" class="match-player-list"></div>
+              </div>
+
+              <div class="drop-zone selected-zone" id="matchPlayersZone" data-match-zone="confirmed">
+                <div class="drop-zone-head">
+                  <h4>Jugadores para partido</h4>
+                  <span id="matchPlayersCount">0</span>
+                </div>
+                <div id="matchPlayersList" class="match-player-list"></div>
+              </div>
+            </div>
           </article>
         </div>
       </section>

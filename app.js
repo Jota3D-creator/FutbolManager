@@ -1,5 +1,5 @@
 var EDITOR_PASSWORD = "bosteros2026";
-var STORAGE_KEY = "bosteros_manager_data_v7_import_position";
+var STORAGE_KEY = "bosteros_manager_data_v10_triangular";
 
 var defaultPlayers = [
   {
@@ -32,7 +32,7 @@ var defaultPlayers = [
     "arquero": 50,
     "posicionNatural": "defensa",
     "photo": "",
-    "status": "confirmed"
+    "status": "base"
   },
   {
     "name": "Gabi",
@@ -64,7 +64,7 @@ var defaultPlayers = [
     "arquero": 50,
     "posicionNatural": "defensa",
     "photo": "",
-    "status": "confirmed"
+    "status": "base"
   },
   {
     "name": "Rodri",
@@ -96,7 +96,7 @@ var defaultPlayers = [
     "arquero": 50,
     "posicionNatural": "delantero",
     "photo": "",
-    "status": "confirmed"
+    "status": "base"
   },
   {
     "name": "Rober",
@@ -128,7 +128,7 @@ var defaultPlayers = [
     "arquero": 50,
     "posicionNatural": "defensa",
     "photo": "",
-    "status": "confirmed"
+    "status": "base"
   },
   {
     "name": "Cabe",
@@ -160,7 +160,7 @@ var defaultPlayers = [
     "arquero": 50,
     "posicionNatural": "mediocampo",
     "photo": "",
-    "status": "confirmed"
+    "status": "base"
   },
   {
     "name": "Carlitos",
@@ -192,7 +192,7 @@ var defaultPlayers = [
     "arquero": 50,
     "posicionNatural": "defensa",
     "photo": "",
-    "status": "confirmed"
+    "status": "base"
   },
   {
     "name": "Niko",
@@ -224,7 +224,7 @@ var defaultPlayers = [
     "arquero": 50,
     "posicionNatural": "mediocampo",
     "photo": "",
-    "status": "confirmed"
+    "status": "base"
   },
   {
     "name": "Joni",
@@ -256,7 +256,7 @@ var defaultPlayers = [
     "arquero": 50,
     "posicionNatural": "delantero",
     "photo": "",
-    "status": "confirmed"
+    "status": "base"
   },
   {
     "name": "Nico",
@@ -288,7 +288,7 @@ var defaultPlayers = [
     "arquero": 50,
     "posicionNatural": "mediocampo",
     "photo": "",
-    "status": "confirmed"
+    "status": "base"
   },
   {
     "name": "Leo 🇮🇹",
@@ -320,7 +320,7 @@ var defaultPlayers = [
     "arquero": 50,
     "posicionNatural": "delantero",
     "photo": "",
-    "status": "confirmed"
+    "status": "base"
   },
   {
     "name": "Tiziano",
@@ -352,7 +352,7 @@ var defaultPlayers = [
     "arquero": 50,
     "posicionNatural": "defensa",
     "photo": "",
-    "status": "confirmed"
+    "status": "base"
   },
   {
     "name": "Facu",
@@ -384,7 +384,7 @@ var defaultPlayers = [
     "arquero": 50,
     "posicionNatural": "mediocampo",
     "photo": "",
-    "status": "confirmed"
+    "status": "base"
   },
   {
     "name": "Cuchu",
@@ -416,7 +416,7 @@ var defaultPlayers = [
     "arquero": 50,
     "posicionNatural": "mediocampo",
     "photo": "",
-    "status": "confirmed"
+    "status": "base"
   },
   {
     "name": "Dylan",
@@ -448,14 +448,14 @@ var defaultPlayers = [
     "arquero": 50,
     "posicionNatural": "lateral",
     "photo": "",
-    "status": "confirmed"
+    "status": "base"
   }
 ];
 
 var state = {
   isEditor: false,
   players: [],
-  teams: { a: [], b: [], positions: {} },
+  teams: { a: [], b: [], c: [], positions: {} },
   match: {
     day: "Miércoles",
     arrival: "22:00",
@@ -464,7 +464,9 @@ var state = {
     map: "https://maps.app.goo.gl/CbSoLSd9j3njXck67",
     cost: 5,
     teamAColor: "yellow",
-    teamBColor: "blue"
+    teamBColor: "blue",
+    teamCColor: "white",
+    mode: "normal"
   }
 };
 
@@ -594,7 +596,7 @@ function rolePenaltyForTeam(indexes, candidateIndex) {
 
 
 function init() {
-  var saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem("bosteros_manager_data_v4_full_stats") || localStorage.getItem("bosteros_manager_data_v3_mobile_drag") || localStorage.getItem("bosteros_manager_data_v2");
+  var saved = localStorage.getItem(STORAGE_KEY);
 
   if (saved) {
     try {
@@ -603,6 +605,9 @@ function init() {
       state.match = parsed.match || state.match;
       state.teams = parsed.teams || state.teams;
       if (!state.teams.positions) state.teams.positions = {};
+      if (!state.teams.c) state.teams.c = [];
+      if (!state.match.mode) state.match.mode = "normal";
+      if (!state.match.teamCColor) state.match.teamCColor = "white";
     } catch (e) {
       state.players = defaultPlayers;
     }
@@ -669,7 +674,7 @@ function normalizePlayers() {
       }
     });
 
-    if (!p.status) p.status = "confirmed";
+    if (!p.status) p.status = "base";
     if (!p.photo) p.photo = "";
     if (!p.posicionNatural) p.posicionNatural = inferNaturalPosition(p);
     return p;
@@ -721,6 +726,10 @@ function bindEvents() {
   document.getElementById("exportDataBtn").addEventListener("click", exportDatabase);
   document.getElementById("importDataBtn").addEventListener("click", triggerImportDatabase);
   document.getElementById("importDataInput").addEventListener("change", importDatabaseFromFile);
+
+  document.getElementById("selectAllForMatchBtn").addEventListener("click", selectAllForMatch);
+  document.getElementById("clearMatchPlayersBtn").addEventListener("click", clearMatchPlayers);
+  bindMatchDropZones();
 }
 
 function showView(id) {
@@ -765,7 +774,7 @@ function renderEditorMode() {
     el.classList.toggle("hidden", !state.isEditor);
   });
 
-  ["matchDay", "matchArrival", "matchStart", "matchPlace", "matchMap", "matchCost", "teamAColor", "teamBColor"].forEach(function(id) {
+  ["matchMode", "matchDay", "matchArrival", "matchStart", "matchPlace", "matchMap", "matchCost", "teamAColor", "teamBColor", "teamCColor"].forEach(function(id) {
     document.getElementById(id).disabled = !state.isEditor;
   });
 
@@ -831,8 +840,8 @@ function avatar(p) {
 
 function renderDashboard() {
   var confirmed = state.players.filter(function(p){ return p.status === "confirmed"; }).length;
-  var maybe = state.players.filter(function(p){ return p.status === "maybe"; }).length;
-  var out = state.players.filter(function(p){ return p.status === "out"; }).length;
+  var maybe = state.players.length - confirmed;
+  var out = (state.teams.a || []).length + (state.teams.b || []).length + (state.teams.c || []).length;
 
   document.getElementById("totalPlayers").textContent = state.players.length;
   document.getElementById("confirmedCount").textContent = confirmed;
@@ -849,24 +858,56 @@ function renderDashboard() {
 }
 
 function playerCardHTML(p, i, editable) {
-  var summary = categoryConfig.map(function(category) {
-    var value = categoryValue(p, category);
-    return '<div class="category-pill"><span>' + category[0] + '</span><strong>' + value + '</strong></div>';
+  var summaryStats = [
+    ["tecnica", "Técnica", "#35e875"],
+    ["pase", "Pase", "#4ca8ff"],
+    ["definicion", "Def.", "#ffd43b"],
+    ["defensa", "Defensa", "#ff5353"],
+    ["fisico", "Físico", "#9c6bff"],
+    ["inteligencia", "Intel.", "#32d4d9"],
+    ["compromiso", "Comp.", "#ff5bae"]
+  ];
+
+  var stats = summaryStats.map(function(s) {
+    var key = s[0], label = s[1], color = s[2];
+    return '<div class="stat-row"><span>' + label + '</span><div class="bar"><i style="--w:' + p[key] + '%;--c:' + color + '"></i></div><b>' + p[key] + '</b></div>';
   }).join("");
+
+  var positionText = positionLabel[p.posicionNatural] || "Polivalente";
+
+  var positionEditor = "";
+  if (editable && state.isEditor) {
+    positionEditor =
+      '<div class="position-editor">' +
+        '<label>Posición natural' +
+          '<select onchange="changeNaturalPosition(' + i + ', this.value)">' +
+            '<option value="polivalente" ' + selected(p.posicionNatural, "polivalente") + '>Polivalente</option>' +
+            '<option value="arquero" ' + selected(p.posicionNatural, "arquero") + '>Arquero</option>' +
+            '<option value="defensa" ' + selected(p.posicionNatural, "defensa") + '>Defensa</option>' +
+            '<option value="lateral" ' + selected(p.posicionNatural, "lateral") + '>Lateral</option>' +
+            '<option value="mediocampo" ' + selected(p.posicionNatural, "mediocampo") + '>Mediocampo</option>' +
+            '<option value="extremo" ' + selected(p.posicionNatural, "extremo") + '>Extremo</option>' +
+            '<option value="delantero" ' + selected(p.posicionNatural, "delantero") + '>Delantero</option>' +
+          '</select>' +
+        '</label>' +
+      '</div>';
+  }
 
   var actions = "";
   if (editable && state.isEditor) {
-    actions = '<div class="card-actions"><button onclick="editPlayer(' + i + ')">Editar</button><button class="delete" onclick="deletePlayer(' + i + ')">Borrar</button></div>';
+    actions = '<div class="card-actions"><button onclick="editPlayer(' + i + ')">Editar stats</button><button class="delete" onclick="deletePlayer(' + i + ')">Borrar</button></div>';
   }
 
   return '<article class="player-card">' +
     '<div class="player-top">' + avatar(p) +
-    '<div><h4>' + p.name + '</h4><div class="ovr">' + overall(p) + ' OVR</div><span class="position-tag">' + (positionLabel[p.posicionNatural] || "Polivalente") + '</span></div></div>' +
-    '<div class="category-pill-grid">' + summary + '</div>' +
-    '<div class="card-note">Resumen condensado. Editar para sliders completos.</div>' +
+    '<div><h4>' + p.name + '</h4><div class="ovr">' + overall(p) + ' OVR</div><span class="position-tag">' + positionText + '</span></div></div>' +
+    stats +
+    '<div class="card-note">Editar stats para ver todos los atributos.</div>' +
+    positionEditor +
     actions +
     '</article>';
 }
+
 function renderPlayers() {
   document.getElementById("playersGrid").innerHTML = state.players.map(function(p, i) {
     return playerCardHTML(p, i, true);
@@ -874,30 +915,176 @@ function renderPlayers() {
 }
 
 function renderCallList() {
-  document.getElementById("callList").innerHTML = state.players.map(function(p, i) {
-    var disabled = state.isEditor ? "" : "disabled";
-    return '<div class="call-item">' +
-      '<div class="call-player">' + avatar(p) + '<div><strong>' + p.name + '</strong><div class="muted">' + overall(p) + ' OVR · ' + (positionLabel[p.posicionNatural] || "Polivalente") + '</div></div></div>' +
-      '<select class="status-select" ' + disabled + ' onchange="changeStatus(' + i + ', this.value)">' +
-        '<option value="confirmed" ' + selected(p.status, "confirmed") + '>Confirmado</option>' +
-        '<option value="maybe" ' + selected(p.status, "maybe") + '>En duda</option>' +
-        '<option value="out" ' + selected(p.status, "out") + '>No viene</option>' +
-      '</select>' +
-    '</div>';
-  }).join("");
+  var basePlayers = [];
+  var matchPlayers = [];
+
+  state.players.forEach(function(p, i) {
+    if (p.status === "confirmed") {
+      matchPlayers.push({ player: p, index: i });
+    } else {
+      basePlayers.push({ player: p, index: i });
+    }
+  });
+
+  document.getElementById("basePlayersCount").textContent = basePlayers.length;
+  document.getElementById("matchPlayersCount").textContent = matchPlayers.length;
+
+  document.getElementById("basePlayersList").innerHTML = basePlayers.map(function(item) {
+    return matchPlayerCardHTML(item.player, item.index, "add");
+  }).join("") || '<div class="empty-list-note">No quedan jugadores en la base.</div>';
+
+  document.getElementById("matchPlayersList").innerHTML = matchPlayers.map(function(item) {
+    return matchPlayerCardHTML(item.player, item.index, "remove");
+  }).join("") || '<div class="empty-list-note">Arrastrá jugadores acá para armar el partido.</div>';
+}
+
+function matchPlayerCardHTML(p, index, mode) {
+  var actionLabel = mode === "add" ? "Agregar al partido" : "Sacar del partido";
+  var actionClass = mode === "add" ? "add" : "remove";
+  var targetStatus = mode === "add" ? "confirmed" : "base";
+  var disabled = state.isEditor ? "" : "disabled";
+
+  return '<div class="match-player-card" draggable="' + (state.isEditor ? "true" : "false") + '" data-player-index="' + index + '" ondragstart="handleMatchDragStart(event)" ondragend="handleMatchDragEnd(event)">' +
+    avatar(p) +
+    '<div class="match-player-info">' +
+      '<strong>' + p.name + '</strong>' +
+      '<small>' + overall(p) + ' OVR · ' + (positionLabel[p.posicionNatural] || "Polivalente") + '</small>' +
+    '</div>' +
+    '<button class="match-player-action ' + actionClass + '" ' + disabled + ' data-target-status="' + targetStatus + '" onclick="setPlayerMatchStatus(' + index + ', this.dataset.targetStatus)">' + actionLabel + '</button>' +
+  '</div>';
+}
+
+function handleMatchDragStart(event) {
+  if (!state.isEditor) {
+    event.preventDefault();
+    return;
+  }
+
+  var index = event.currentTarget.dataset.playerIndex;
+  event.dataTransfer.setData("text/plain", index);
+  event.currentTarget.classList.add("dragging");
+}
+
+function handleMatchDragEnd(event) {
+  event.currentTarget.classList.remove("dragging");
+}
+
+function bindMatchDropZones() {
+  ["basePlayersZone", "matchPlayersZone"].forEach(function(id) {
+    var zone = document.getElementById(id);
+    if (!zone) return;
+
+    zone.addEventListener("dragover", function(event) {
+      if (!state.isEditor) return;
+      event.preventDefault();
+      zone.classList.add("drag-over");
+    });
+
+    zone.addEventListener("dragleave", function() {
+      zone.classList.remove("drag-over");
+    });
+
+    zone.addEventListener("drop", function(event) {
+      if (!state.isEditor) return;
+      event.preventDefault();
+      zone.classList.remove("drag-over");
+
+      var index = Number(event.dataTransfer.getData("text/plain"));
+      var targetStatus = zone.dataset.matchZone;
+
+      if (!Number.isNaN(index)) {
+        setPlayerMatchStatus(index, targetStatus);
+      }
+    });
+  });
+}
+
+function setPlayerMatchStatus(index, status) {
+  if (!state.isEditor) {
+    alert("Necesitás activar modo editor");
+    return;
+  }
+
+  if (!state.players[index]) return;
+
+  state.players[index].status = status === "confirmed" ? "confirmed" : "base";
+  clearGeneratedTeamsSilent();
+  saveData();
+  renderDashboard();
+  renderCallList();
+  renderTeams();
+}
+
+function selectAllForMatch() {
+  if (!state.isEditor) return;
+
+  state.players.forEach(function(p) {
+    p.status = "confirmed";
+  });
+
+  clearGeneratedTeamsSilent();
+  saveData();
+  renderDashboard();
+  renderCallList();
+  renderTeams();
+}
+
+function clearMatchPlayers() {
+  if (!state.isEditor) return;
+
+  if (!confirm("¿Vaciar jugadores para partido? También se borran los equipos generados.")) return;
+
+  state.players.forEach(function(p) {
+    p.status = "base";
+  });
+
+  clearGeneratedTeamsSilent();
+  saveData();
+  renderDashboard();
+  renderCallList();
+  renderTeams();
+}
+
+function clearGeneratedTeamsSilent() {
+  state.teams = { a: [], b: [], c: [], positions: {} };
+  document.getElementById("sharePanel").classList.add("hidden");
 }
 
 function selected(a, b) { return a === b ? "selected" : ""; }
 
 function changeStatus(index, value) {
-  if (!state.isEditor) return;
-  state.players[index].status = value;
-  saveData();
-  renderDashboard();
-  renderCallList();
+  setPlayerMatchStatus(index, value);
 }
 
+
+function isTriangular() {
+  return (state.match.mode || "normal") === "triangular";
+}
+
+function renderTriangularModeUI() {
+  var triangular = isTriangular();
+
+  document.querySelectorAll(".triangular-only").forEach(function(el) {
+    el.classList.toggle("hidden", !triangular);
+  });
+
+  var summary = document.getElementById("teamsSummary");
+  var comparison = document.getElementById("teamComparisonGrid");
+  var list = document.getElementById("teamsListGrid");
+  var mainPitch = document.getElementById("mainPitch");
+
+  if (summary) summary.classList.toggle("triangular-grid", triangular);
+  if (comparison) comparison.classList.toggle("triangular-grid", triangular);
+  if (list) list.classList.toggle("triangular-grid", triangular);
+  if (mainPitch) mainPitch.classList.toggle("triangular-mode", triangular);
+
+  var dashPitch = document.querySelector(".pitch-dashboard");
+  if (dashPitch) dashPitch.classList.toggle("triangular-mode", triangular);
+}
+
+
 function renderMatchForm() {
+  document.getElementById("matchMode").value = state.match.mode || "normal";
   document.getElementById("matchDay").value = state.match.day;
   document.getElementById("matchArrival").value = state.match.arrival;
   document.getElementById("matchStart").value = state.match.start;
@@ -906,11 +1093,14 @@ function renderMatchForm() {
   document.getElementById("matchCost").value = state.match.cost;
   document.getElementById("teamAColor").value = state.match.teamAColor;
   document.getElementById("teamBColor").value = state.match.teamBColor;
+  document.getElementById("teamCColor").value = state.match.teamCColor || "white";
+  renderTriangularModeUI();
 }
 
 function saveMatchFromForm() {
   if (!state.isEditor) return;
 
+  state.match.mode = document.getElementById("matchMode").value || "normal";
   state.match.day = document.getElementById("matchDay").value;
   state.match.arrival = document.getElementById("matchArrival").value;
   state.match.start = document.getElementById("matchStart").value;
@@ -919,6 +1109,7 @@ function saveMatchFromForm() {
   state.match.cost = Number(document.getElementById("matchCost").value) || 5;
   state.match.teamAColor = document.getElementById("teamAColor").value;
   state.match.teamBColor = document.getElementById("teamBColor").value;
+  state.match.teamCColor = document.getElementById("teamCColor").value || "white";
 
   saveData();
   renderDashboard();
@@ -932,7 +1123,7 @@ function emptyPlayerTemplate() {
     name: "",
     posicionNatural: "polivalente",
     photo: "",
-    status: "confirmed"
+    status: "base"
   };
 
   statConfig.forEach(function(stat) {
@@ -1017,6 +1208,7 @@ function updateModalOverallPreview() {
 
 function fillModal(p) {
   document.getElementById("playerName").value = p.name;
+  document.getElementById("posicionNatural").value = p.posicionNatural || "polivalente";
   renderStatsEditor(p);
   updateModalOverallPreview();
 
@@ -1035,7 +1227,7 @@ function deletePlayer(index) {
   if (!state.isEditor) return;
   if (!confirm("¿Borrar a " + state.players[index].name + "?")) return;
   state.players.splice(index, 1);
-  state.teams = { a: [], b: [], positions: {} };
+  state.teams = { a: [], b: [], c: [], positions: {} };
   saveData();
   renderAll();
 }
@@ -1079,7 +1271,7 @@ function savePlayerFromModal() {
     name: name,
     posicionNatural: document.getElementById("posicionNatural").value || "polivalente",
     photo: document.getElementById("photoPreview").dataset.photo || "",
-    status: "confirmed"
+    status: "base"
   };
 
   statConfig.forEach(function(stat) {
@@ -1125,8 +1317,10 @@ function makeTeams(randomize) {
     .map(function(p, index){ return { player: p, index: index }; })
     .filter(function(item){ return item.player.status === "confirmed"; });
 
-  if (confirmed.length < 2) {
-    alert("Necesitás al menos 2 confirmados");
+  var teamCount = isTriangular() ? 3 : 2;
+
+  if (confirmed.length < teamCount) {
+    alert("Necesitás al menos " + teamCount + " jugadores para generar equipos.");
     return;
   }
 
@@ -1135,30 +1329,36 @@ function makeTeams(randomize) {
     return overall(b.player) - overall(a.player);
   });
 
-  var a = [];
-  var b = [];
+  var teams = [[], [], []];
+  var maxPerTeam = Math.ceil(confirmed.length / teamCount);
 
   confirmed.forEach(function(item) {
-    var maxPerTeam = Math.ceil(confirmed.length / 2);
+    var bestTeam = 0;
+    var bestScore = Infinity;
 
-    var scoreA = a.reduce(function(sum, x){ return sum + overall(state.players[x]); }, 0);
-    var scoreB = b.reduce(function(sum, x){ return sum + overall(state.players[x]); }, 0);
+    for (var t = 0; t < teamCount; t++) {
+      if (teams[t].length >= maxPerTeam) continue;
 
-    var optionA = scoreA + overall(item.player) + rolePenaltyForTeam(a, item.index);
-    var optionB = scoreB + overall(item.player) + rolePenaltyForTeam(b, item.index);
+      var rawScore = teams[t].reduce(function(sum, x) {
+        return sum + overall(state.players[x]);
+      }, 0);
 
-    if (a.length >= maxPerTeam) {
-      b.push(item.index);
-    } else if (b.length >= maxPerTeam) {
-      a.push(item.index);
-    } else if (optionA <= optionB) {
-      a.push(item.index);
-    } else {
-      b.push(item.index);
+      var optionScore = rawScore + overall(item.player) + rolePenaltyForTeam(teams[t], item.index);
+
+      if (optionScore < bestScore) {
+        bestScore = optionScore;
+        bestTeam = t;
+      }
     }
+
+    teams[bestTeam].push(item.index);
   });
 
-  state.teams = { a: a, b: b, positions: defaultPositionsForTeams(a, b) };
+  var a = teams[0];
+  var b = teams[1];
+  var c = isTriangular() ? teams[2] : [];
+
+  state.teams = { a: a, b: b, c: c, positions: defaultPositionsForTeams(a, b, c) };
   saveData();
   renderTeams();
   renderDashboard();
@@ -1169,25 +1369,39 @@ function resetTeams() {
   if (!state.isEditor) return;
   if (!confirm("¿Resetear equipos? Se borra la formación actual.")) return;
 
-  state.teams = { a: [], b: [], positions: {} };
+  state.teams = { a: [], b: [], c: [], positions: {} };
   saveData();
   renderTeams();
+  renderDashboard();
   renderDashboardPitch();
   document.getElementById("sharePanel").classList.add("hidden");
 }
 
-function defaultPositionsForTeams(a, b) {
-  var positionsA = [[12,50], [25,24], [25,50], [25,76], [40,34], [40,66], [47,50], [34,50], [18,38], [18,62]];
-  var positionsB = [[88,50], [75,24], [75,50], [75,76], [60,34], [60,66], [53,50], [66,50], [82,38], [82,62]];
+function defaultPositionsForTeams(a, b, c) {
+  var positionsA = [[14,50], [24,28], [24,72], [36,36], [36,64], [30,50], [44,50], [18,38], [18,62], [42,24], [42,76]];
+  var positionsB = [[86,50], [76,28], [76,72], [64,36], [64,64], [70,50], [56,50], [82,38], [82,62], [58,24], [58,76]];
+  var positionsC = [[50,16], [38,28], [62,28], [44,42], [56,42], [50,56], [40,70], [60,70], [50,84], [34,56], [66,56]];
+
+  if (isTriangular()) {
+    positionsA = [[16,18], [16,34], [16,50], [16,66], [16,82], [27,34], [27,50], [27,66], [27,18], [27,82]];
+    positionsB = [[50,18], [50,34], [50,50], [50,66], [50,82], [39,34], [39,50], [39,66], [61,34], [61,66]];
+    positionsC = [[84,18], [84,34], [84,50], [84,66], [84,82], [73,34], [73,50], [73,66], [73,18], [73,82]];
+  }
+
   var positions = {};
 
-  a.forEach(function(index, i) {
-    var pos = positionsA[i] || [18 + (i % 4) * 8, 18 + Math.floor(i / 4) * 16];
+  (a || []).forEach(function(index, i) {
+    var pos = positionsA[i] || [18 + (i % 3) * 7, 18 + Math.floor(i / 3) * 15];
     positions[index] = { x: pos[0], y: pos[1] };
   });
 
-  b.forEach(function(index, i) {
-    var pos = positionsB[i] || [82 - (i % 4) * 8, 18 + Math.floor(i / 4) * 16];
+  (b || []).forEach(function(index, i) {
+    var pos = positionsB[i] || [82 - (i % 3) * 7, 18 + Math.floor(i / 3) * 15];
+    positions[index] = { x: pos[0], y: pos[1] };
+  });
+
+  (c || []).forEach(function(index, i) {
+    var pos = positionsC[i] || [50 + ((i % 3) - 1) * 8, 18 + Math.floor(i / 3) * 15];
     positions[index] = { x: pos[0], y: pos[1] };
   });
 
@@ -1201,30 +1415,40 @@ function teamAverage(indexes) {
 }
 
 function renderTeams() {
+  renderTriangularModeUI();
+
   var a = state.teams.a || [];
   var b = state.teams.b || [];
+  var c = state.teams.c || [];
   var avgA = teamAverage(a);
   var avgB = teamAverage(b);
-  var diff = Math.abs(avgA - avgB);
-  var balance = a.length && b.length ? Math.max(0, 100 - diff * 8) : 0;
+  var avgC = teamAverage(c);
+
+  var avgs = isTriangular() ? [avgA, avgB, avgC].filter(function(v){ return v > 0; }) : [avgA, avgB].filter(function(v){ return v > 0; });
+  var diff = avgs.length ? Math.max.apply(null, avgs) - Math.min.apply(null, avgs) : 0;
+  var balance = avgs.length >= 2 ? Math.max(0, 100 - diff * 8) : 0;
 
   document.getElementById("teamAAvg").textContent = avgA + " OVR";
   document.getElementById("teamBAvg").textContent = avgB + " OVR";
+  document.getElementById("teamCAvg").textContent = avgC + " OVR";
   document.getElementById("balanceScore").textContent = balance + "%";
 
   var labelA = colorLabel[state.match.teamAColor] || "Equipo A";
   var labelB = colorLabel[state.match.teamBColor] || "Equipo B";
+  var labelC = colorLabel[state.match.teamCColor] || "Equipo C";
 
-  setTeamLabels(labelA, labelB);
+  setTeamLabels(labelA, labelB, labelC);
 
-  renderPitch("pitchPlayers", a, b, true);
+  renderPitch("pitchPlayers", a, b, c, true);
   renderTeamList("teamAList", a);
   renderTeamList("teamBList", b);
+  renderTeamList("teamCList", c);
   renderTeamCompare("teamACompare", a);
   renderTeamCompare("teamBCompare", b);
+  renderTeamCompare("teamCCompare", c);
 }
 
-function setTeamLabels(labelA, labelB) {
+function setTeamLabels(labelA, labelB, labelC) {
   ["teamALabel", "dashboardTeamALabel"].forEach(function(id) {
     var el = document.getElementById(id);
     if (!el) return;
@@ -1239,10 +1463,20 @@ function setTeamLabels(labelA, labelB) {
     el.textContent = labelB;
   });
 
+  ["teamCLabel", "dashboardTeamCLabel"].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.className = "shirt-tag " + (state.match.teamCColor || "white") + " triangular-only";
+    el.classList.toggle("hidden", !isTriangular());
+    el.textContent = labelC || "Equipo C";
+  });
+
   document.getElementById("teamAListTitle").textContent = labelA;
   document.getElementById("teamBListTitle").textContent = labelB;
+  document.getElementById("teamCListTitle").textContent = labelC || "Equipo C";
   document.getElementById("teamACompareTitle").textContent = labelA;
   document.getElementById("teamBCompareTitle").textContent = labelB;
+  document.getElementById("teamCCompareTitle").textContent = labelC || "Equipo C";
 }
 
 function teamStatAverage(indexes, keys) {
@@ -1268,20 +1502,29 @@ function renderTeamCompare(id, indexes) {
 function renderDashboardPitch() {
   var labelA = colorLabel[state.match.teamAColor] || "Equipo A";
   var labelB = colorLabel[state.match.teamBColor] || "Equipo B";
-  setTeamLabels(labelA, labelB);
-  renderPitch("dashboardPitchPlayers", state.teams.a || [], state.teams.b || [], false);
+  var labelC = colorLabel[state.match.teamCColor] || "Equipo C";
+  setTeamLabels(labelA, labelB, labelC);
+  renderPitch("dashboardPitchPlayers", state.teams.a || [], state.teams.b || [], state.teams.c || [], false);
 }
 
-function renderPitch(containerId, a, b, draggable) {
+function renderPitch(containerId, a, b, c, draggable) {
+  renderTriangularModeUI();
+
   var html = "";
 
-  a.forEach(function(index) {
+  (a || []).forEach(function(index) {
     html += pitchPlayerHTML(index, "team-a", draggable);
   });
 
-  b.forEach(function(index) {
+  (b || []).forEach(function(index) {
     html += pitchPlayerHTML(index, "team-b", draggable);
   });
+
+  if (isTriangular()) {
+    (c || []).forEach(function(index) {
+      html += pitchPlayerHTML(index, "team-c", draggable);
+    });
+  }
 
   if (!html) {
     html = '<div class="empty-pitch">Aún no se han generado los equipos.</div>';
@@ -1368,25 +1611,40 @@ function renderTeamList(id, indexes) {
 function buildShareText() {
   var a = state.teams.a || [];
   var b = state.teams.b || [];
+  var c = state.teams.c || [];
   var labelA = colorLabel[state.match.teamAColor] || "Equipo A";
   var labelB = colorLabel[state.match.teamBColor] || "Equipo B";
+  var labelC = colorLabel[state.match.teamCColor] || "Equipo C";
 
-  var text = "⚽ LOS BOSTEROS - EQUIPOS\n\n";
-  text += "🏟️ " + state.match.place + "\n";
-  text += "🕖 Llegada: " + state.match.arrival + " · Inicio: " + state.match.start + "\n";
-  text += "💶 Costo: " + state.match.cost + "€\n\n";
+  var text = "⚽ LOS BOSTEROS - EQUIPOS\\n\\n";
+  text += "🏟️ " + state.match.place + "\\n";
+  text += "🕖 Llegada: " + state.match.arrival + " · Inicio: " + state.match.start + "\\n";
+  text += "💶 Costo: " + state.match.cost + "€\\n";
+  text += "🎮 Formato: " + (isTriangular() ? "Triangular, 3 equipos" : "Normal, 2 equipos") + "\\n\\n";
 
-  text += "🟡 " + labelA + " (" + teamAverage(a) + " OVR)\n";
+  text += "🟡 " + labelA + " (" + teamAverage(a) + " OVR)\\n";
   a.forEach(function(index) {
-    text += "• " + state.players[index].name + "\n";
+    text += "• " + state.players[index].name + "\\n";
   });
 
-  text += "\n🔵 " + labelB + " (" + teamAverage(b) + " OVR)\n";
+  text += "\\n🔵 " + labelB + " (" + teamAverage(b) + " OVR)\\n";
   b.forEach(function(index) {
-    text += "• " + state.players[index].name + "\n";
+    text += "• " + state.players[index].name + "\\n";
   });
 
-  text += "\n📍 Mapa: " + state.match.map;
+  if (isTriangular()) {
+    text += "\\n⚪ " + labelC + " (" + teamAverage(c) + " OVR)\\n";
+    c.forEach(function(index) {
+      text += "• " + state.players[index].name + "\\n";
+    });
+
+    text += "\\n🔁 Orden sugerido triangular:\\n";
+    text += "1. " + labelA + " vs " + labelB + "\\n";
+    text += "2. " + labelB + " vs " + labelC + "\\n";
+    text += "3. " + labelA + " vs " + labelC + "\\n";
+  }
+
+  text += "\\n📍 Mapa: " + state.match.map;
   return text;
 }
 
@@ -1475,10 +1733,19 @@ function importDatabaseFromFile(event) {
 
       state.players = data.players;
       state.match = data.match || state.match;
-      state.teams = data.teams || { a: [], b: [], positions: {} };
+      state.teams = data.teams || { a: [], b: [], c: [], positions: {} };
 
       if (!state.teams.positions) {
         state.teams.positions = {};
+      }
+      if (!state.teams.c) {
+        state.teams.c = [];
+      }
+      if (!state.match.mode) {
+        state.match.mode = "normal";
+      }
+      if (!state.match.teamCColor) {
+        state.match.teamCColor = "white";
       }
 
       normalizePlayers();
