@@ -4,231 +4,201 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Fútbol 7 Manager</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css" />
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #05080d;
+      color: white;
+      padding: 24px;
+    }
+
+    h1 {
+      color: #27e36d;
+    }
+
+    button {
+      background: #27e36d;
+      color: #031007;
+      border: none;
+      padding: 12px 18px;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      margin: 6px;
+    }
+
+    button.secondary {
+      background: transparent;
+      color: white;
+      border: 1px solid #2d3a4a;
+    }
+
+    .section {
+      display: none;
+      margin-top: 24px;
+      padding: 20px;
+      border: 1px solid #263241;
+      border-radius: 16px;
+      background: #0b121b;
+    }
+
+    .section.active {
+      display: block;
+    }
+
+    input {
+      display: block;
+      width: 100%;
+      max-width: 360px;
+      margin: 8px 0 16px;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #263241;
+      background: #111b27;
+      color: white;
+    }
+
+    .player-card {
+      padding: 14px;
+      border: 1px solid #263241;
+      border-radius: 12px;
+      margin: 10px 0;
+      background: #111b27;
+      max-width: 420px;
+    }
+  </style>
 </head>
+
 <body>
-  <div class="app">
-    <aside class="sidebar">
-      <div class="brand">
-        <div class="logo">⚽</div>
-        <div>
-          <h1>FÚTBOL 7</h1>
-          <span>MANAGER</span>
-        </div>
-      </div>
+  <h1>Fútbol 7 Manager</h1>
 
-      <nav class="nav">
-        <button class="nav-item active" data-view="dashboard">Dashboard</button>
-        <button class="nav-item" data-view="players">Base de jugadores</button>
-        <button class="nav-item" data-view="match">Armar partido</button>
-        <button class="nav-item" data-view="teams">Equipos</button>
-      </nav>
+  <button onclick="showSection('jugadores')">Base de jugadores</button>
+  <button onclick="showSection('partido')">Armar partido</button>
+  <button onclick="showSection('equipos')">Equipos</button>
 
-      <div class="side-card">
-        <span>Próximo partido</span>
-        <strong id="sideMatchTitle">Sin partido cargado</strong>
-        <p id="sideMatchMeta">Cargá día, hora y cancha.</p>
-        <button class="primary full" data-view-target="match">Crear partido</button>
-      </div>
-    </aside>
+  <section id="jugadores" class="section active">
+    <h2>Base de jugadores</h2>
 
-    <main class="main">
-      <header class="topbar">
-        <div>
-          <h2 id="pageTitle">Dashboard</h2>
-          <p id="pageSubtitle">Gestión de jugadores, convocados y equipos.</p>
-        </div>
+    <label>Nombre del jugador</label>
+    <input id="playerName" type="text" placeholder="Ej: Flego">
 
-        <div class="actions">
-          <button class="ghost" id="exportBtn">Exportar JSON</button>
-          <button class="primary" data-view-target="players">+ Agregar jugador</button>
-        </div>
-      </header>
+    <label>Técnica</label>
+    <input id="tecnica" type="number" min="1" max="100" placeholder="70">
 
-      <section class="view active" id="dashboard">
-        <div class="dashboard-panels">
-          <div class="panel wide">
-            <h3>Plantel</h3>
-            <div class="big-number"><span id="dashboardPlayerCount">0</span><small>jugadores registrados</small></div>
+    <label>Pase</label>
+    <input id="pase" type="number" min="1" max="100" placeholder="60">
+
+    <label>Definición</label>
+    <input id="definicion" type="number" min="1" max="100" placeholder="80">
+
+    <button onclick="addPlayer()">Agregar jugador</button>
+
+    <h3>Jugadores cargados</h3>
+    <div id="playersList"></div>
+  </section>
+
+  <section id="partido" class="section">
+    <h2>Armar partido</h2>
+
+    <label>Día</label>
+    <input id="matchDate" type="date">
+
+    <label>Hora</label>
+    <input id="matchTime" type="time">
+
+    <label>Lugar</label>
+    <input id="matchPlace" type="text" placeholder="Ej: Cancha La Verde">
+
+    <label>Link de Google Maps</label>
+    <input id="matchMap" type="text" placeholder="Pegá el link del mapa">
+
+    <button onclick="saveMatch()">Guardar partido</button>
+
+    <div id="matchInfo"></div>
+  </section>
+
+  <section id="equipos" class="section">
+    <h2>Equipos</h2>
+    <p>Acá después vamos a generar los equipos.</p>
+    <div id="teamsInfo"></div>
+  </section>
+
+  <script>
+    var players = [];
+    var match = {};
+
+    function showSection(sectionId) {
+      var sections = document.querySelectorAll('.section');
+
+      for (var i = 0; i < sections.length; i++) {
+        sections[i].classList.remove('active');
+      }
+
+      document.getElementById(sectionId).classList.add('active');
+    }
+
+    function addPlayer() {
+      var name = document.getElementById('playerName').value;
+      var tecnica = document.getElementById('tecnica').value;
+      var pase = document.getElementById('pase').value;
+      var definicion = document.getElementById('definicion').value;
+
+      if (name === '') {
+        alert('Poné el nombre del jugador');
+        return;
+      }
+
+      var player = {
+        name: name,
+        tecnica: tecnica,
+        pase: pase,
+        definicion: definicion
+      };
+
+      players.push(player);
+
+      document.getElementById('playerName').value = '';
+      document.getElementById('tecnica').value = '';
+      document.getElementById('pase').value = '';
+      document.getElementById('definicion').value = '';
+
+      renderPlayers();
+    }
+
+    function renderPlayers() {
+      var container = document.getElementById('playersList');
+      container.innerHTML = '';
+
+      for (var i = 0; i < players.length; i++) {
+        var player = players[i];
+
+        container.innerHTML += `
+          <div class="player-card">
+            <strong>${player.name}</strong>
+            <p>Técnica: ${player.tecnica}</p>
+            <p>Pase: ${player.pase}</p>
+            <p>Definición: ${player.definicion}</p>
           </div>
+        `;
+      }
+    }
 
-          <div class="panel">
-            <h3>Nivel general</h3>
-            <div class="general-level">
-              <div class="mini-ring" id="squadOverall" style="--value:0; --color:var(--green)"><span>0</span></div>
-              <div>
-                <strong id="squadLabel">Sin datos</strong>
-                <p>El promedio se calcula con las 7 aptitudes.</p>
-              </div>
-            </div>
-          </div>
-        </div>
+    function saveMatch() {
+      match.date = document.getElementById('matchDate').value;
+      match.time = document.getElementById('matchTime').value;
+      match.place = document.getElementById('matchPlace').value;
+      match.map = document.getElementById('matchMap').value;
 
-        <div class="panel mt">
-          <h3>Promedios por aptitud</h3>
-          <div class="team-averages" id="teamAverages"></div>
-        </div>
-
-        <div class="section-title">
-          <h2>Jugadores</h2>
-          <p>Vista rápida del plantel.</p>
-        </div>
-
-        <section class="players-grid" id="dashboardPlayersGrid"></section>
-      </section>
-
-      <section class="view" id="players">
-        <div class="layout-two">
-          <form class="panel form-panel" id="playerForm">
-            <h3 id="formTitle">Agregar jugador</h3>
-
-            <input type="hidden" id="playerId">
-
-            <label>
-              Nombre
-              <input id="name" type="text" placeholder="Ej: Flego" required>
-            </label>
-
-            <label>
-              Foto
-              <input id="photo" type="file" accept="image/*">
-            </label>
-
-            <div class="form-grid">
-              <label>Técnica <input id="tecnica" type="number" min="1" max="100" required></label>
-              <label>Pase <input id="pase" type="number" min="1" max="100" required></label>
-              <label>Definición <input id="definicion" type="number" min="1" max="100" required></label>
-              <label>Defensa <input id="defensa" type="number" min="1" max="100" required></label>
-              <label>Físico <input id="fisico" type="number" min="1" max="100" required></label>
-              <label>Inteligencia <input id="inteligencia" type="number" min="1" max="100" required></label>
-              <label>Compromiso <input id="compromiso" type="number" min="1" max="100" required></label>
-            </div>
-
-            <div class="form-actions">
-              <button class="primary" type="submit">Guardar jugador</button>
-              <button class="ghost" type="button" id="cancelEditBtn">Cancelar</button>
-            </div>
-
-            <p class="hint">Los datos quedan guardados en este navegador usando localStorage.</p>
-          </form>
-
-          <div>
-            <div class="section-title compact">
-              <h2>Base de datos</h2>
-              <p>Agregá, editá o eliminá jugadores.</p>
-            </div>
-            <section class="players-grid compact-grid" id="playersGrid"></section>
-          </div>
-        </div>
-      </section>
-
-      <section class="view" id="match">
-        <div class="layout-two">
-          <form class="panel form-panel" id="matchForm">
-            <h3>Datos del partido</h3>
-
-            <div class="form-grid">
-              <label>Día <input id="matchDate" type="date"></label>
-              <label>Hora <input id="matchTime" type="time"></label>
-            </div>
-
-            <label>
-              Cancha / Lugar
-              <input id="matchPlace" type="text" placeholder="Ej: Cancha La Verde">
-            </label>
-
-            <label>
-              Link de Google Maps
-              <input id="matchMap" type="url" placeholder="Pegá el link de Google Maps">
-            </label>
-
-            <div class="form-grid">
-              <label>
-                Color Equipo A
-                <select id="teamAColor">
-                  <option value="amarilla">Boca amarilla</option>
-                  <option value="azul">Boca azul</option>
-                  <option value="blanca">Boca blanca</option>
-                </select>
-              </label>
-
-              <label>
-                Color Equipo B
-                <select id="teamBColor">
-                  <option value="azul">Boca azul</option>
-                  <option value="amarilla">Boca amarilla</option>
-                  <option value="blanca">Boca blanca</option>
-                </select>
-              </label>
-            </div>
-
-            <button class="primary full" type="submit">Guardar partido</button>
-          </form>
-
-          <div class="panel">
-            <h3>Convocados</h3>
-            <p class="hint">Marcá los jugadores que vienen a este partido. Para 7v7 necesitás 14.</p>
-            <div class="call-list" id="callList"></div>
-            <div class="call-summary">
-              <strong id="selectedCount">0 seleccionados</strong>
-              <button class="primary" id="generateTeamsBtn">Generar equipos</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="panel mt" id="mapPreviewPanel">
-          <h3>Mapa</h3>
-          <a id="mapPreview" href="#" target="_blank" rel="noopener">Todavía no hay link de mapa cargado.</a>
-        </div>
-      </section>
-
-      <section class="view" id="teams">
-        <div class="section-title">
-          <h2>Equipos generados</h2>
-          <p>Balanceados según las aptitudes de los convocados.</p>
-        </div>
-
-        <div class="match-summary panel">
-          <div>
-            <span>Día y hora</span>
-            <strong id="teamsMatchDate">Sin definir</strong>
-          </div>
-          <div>
-            <span>Lugar</span>
-            <strong id="teamsMatchPlace">Sin definir</strong>
-          </div>
-          <div>
-            <span>Mapa</span>
-            <strong><a id="teamsMapLink" href="#" target="_blank" rel="noopener">Sin mapa</a></strong>
-          </div>
-        </div>
-
-        <div class="teams-grid">
-          <div class="team-card">
-            <div class="team-heading">
-              <h3>Equipo A</h3>
-              <span class="shirt" id="teamAColorLabel">Boca amarilla</span>
-            </div>
-            <div id="teamA"></div>
-            <div class="team-total" id="teamATotal"></div>
-          </div>
-
-          <div class="team-card">
-            <div class="team-heading">
-              <h3>Equipo B</h3>
-              <span class="shirt" id="teamBColorLabel">Boca azul</span>
-            </div>
-            <div id="teamB"></div>
-            <div class="team-total" id="teamBTotal"></div>
-          </div>
-        </div>
-      </section>
-    </main>
-  </div>
-
-  <script src="app.js"></script>
+      document.getElementById('matchInfo').innerHTML = `
+        <h3>Partido guardado</h3>
+        <p>Día: ${match.date}</p>
+        <p>Hora: ${match.time}</p>
+        <p>Lugar: ${match.place}</p>
+        <p>Mapa: ${match.map}</p>
+      `;
+    }
+  </script>
 </body>
 </html>
