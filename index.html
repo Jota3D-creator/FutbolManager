@@ -36,7 +36,7 @@
       <header class="topbar">
         <div>
           <h2 id="viewTitle">Dashboard</h2>
-          <p id="viewSubtitle">Próximo partido, convocados y resumen general.</p>
+          <p id="viewSubtitle">Próximo partido, cancha y jugadores.</p>
         </div>
         <button class="primary-btn editor-only hidden" id="openPlayerModalBtn">+ Nuevo jugador</button>
       </header>
@@ -89,8 +89,30 @@
 
         <div class="section-head">
           <div>
+            <h3>Vista rápida de la cancha</h3>
+            <p>Si ya generaste equipos, los vas a ver acá. Si no, queda vacía.</p>
+          </div>
+          <button class="ghost-btn" data-view-target="teams">Ir a equipos</button>
+        </div>
+
+        <div class="pitch-panel panel dashboard-pitch-panel">
+          <div class="team-tabs compact-tabs">
+            <div id="dashboardTeamALabel" class="shirt-tag yellow">Boca amarilla</div>
+            <div id="dashboardTeamBLabel" class="shirt-tag blue">Boca azul</div>
+          </div>
+          <div class="pitch pitch-dashboard">
+            <div class="half-line"></div>
+            <div class="center-circle"></div>
+            <div class="box left"></div>
+            <div class="box right"></div>
+            <div id="dashboardPitchPlayers"></div>
+          </div>
+        </div>
+
+        <div class="section-head">
+          <div>
             <h3>Jugadores</h3>
-            <p>Vista rápida del plantel.</p>
+            <p>Lista rápida del plantel.</p>
           </div>
         </div>
 
@@ -168,7 +190,7 @@
         <div class="section-head">
           <div>
             <h3>Equipos generados</h3>
-            <p>Planteados sobre la cancha.</p>
+            <p>Podés mover las piezas en la cancha. En modo editor se guardan las posiciones.</p>
           </div>
           <div class="teams-actions editor-only hidden">
             <button class="primary-btn" id="generateTeamsBtn">Generar</button>
@@ -184,6 +206,21 @@
           <div class="panel small-summary"><span>Equipo B</span><strong id="teamBAvg">0 OVR</strong></div>
         </div>
 
+        <div class="pitch-panel panel">
+          <div class="team-tabs">
+            <div id="teamALabel" class="shirt-tag yellow">Boca amarilla</div>
+            <div id="teamBLabel" class="shirt-tag blue">Boca azul</div>
+          </div>
+
+          <div class="pitch pitch-main" id="mainPitch">
+            <div class="half-line"></div>
+            <div class="center-circle"></div>
+            <div class="box left"></div>
+            <div class="box right"></div>
+            <div id="pitchPlayers"></div>
+          </div>
+        </div>
+
         <div class="team-comparison">
           <article class="panel">
             <h3 id="teamACompareTitle">Equipo A</h3>
@@ -193,21 +230,6 @@
             <h3 id="teamBCompareTitle">Equipo B</h3>
             <div id="teamBCompare"></div>
           </article>
-        </div>
-
-        <div class="pitch-panel panel">
-          <div class="team-tabs">
-            <div id="teamALabel" class="shirt-tag yellow">Boca amarilla</div>
-            <div id="teamBLabel" class="shirt-tag blue">Boca azul</div>
-          </div>
-
-          <div class="pitch">
-            <div class="half-line"></div>
-            <div class="center-circle"></div>
-            <div class="box left"></div>
-            <div class="box right"></div>
-            <div id="pitchPlayers"></div>
-          </div>
         </div>
 
         <div class="teams-list">
@@ -254,16 +276,7 @@
             <input id="playerName" type="text" placeholder="Ej: Flego" />
           </label>
 
-          <div class="form-grid">
-            <label>Técnica <input id="tecnica" type="number" min="1" max="100" /></label>
-            <label>Pase <input id="pase" type="number" min="1" max="100" /></label>
-            <label>Definición <input id="definicion" type="number" min="1" max="100" /></label>
-            <label>Defensa <input id="defensa" type="number" min="1" max="100" /></label>
-            <label>Físico <input id="fisico" type="number" min="1" max="100" /></label>
-            <label>Inteligencia <input id="inteligencia" type="number" min="1" max="100" /></label>
-            <label>Compromiso <input id="compromiso" type="number" min="1" max="100" /></label>
-            <label>Arquero <input id="arquero" type="number" min="1" max="100" value="50" /></label>
-          </div>
+          <div id="statsEditor"></div>
         </div>
       </div>
 

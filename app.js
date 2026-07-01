@@ -1,26 +1,447 @@
 var EDITOR_PASSWORD = "bosteros2026";
+var STORAGE_KEY = "bosteros_manager_data_v4_full_stats";
 
 var defaultPlayers = [
-  { name: "Flego", tecnica: 70, pase: 60, definicion: 80, defensa: 80, fisico: 80, inteligencia: 75, compromiso: 85, arquero: 50, photo: "", status: "confirmed" },
-  { name: "Gabi", tecnica: 60, pase: 60, definicion: 70, defensa: 80, fisico: 65, inteligencia: 65, compromiso: 85, arquero: 50, photo: "", status: "confirmed" },
-  { name: "Rodri", tecnica: 80, pase: 70, definicion: 85, defensa: 50, fisico: 60, inteligencia: 65, compromiso: 85, arquero: 50, photo: "", status: "confirmed" },
-  { name: "Rober", tecnica: 75, pase: 70, definicion: 80, defensa: 80, fisico: 65, inteligencia: 70, compromiso: 85, arquero: 50, photo: "", status: "confirmed" },
-  { name: "Cabe", tecnica: 65, pase: 65, definicion: 75, defensa: 60, fisico: 55, inteligencia: 60, compromiso: 75, arquero: 50, photo: "", status: "confirmed" },
-  { name: "Carlitos", tecnica: 70, pase: 70, definicion: 70, defensa: 80, fisico: 85, inteligencia: 65, compromiso: 85, arquero: 50, photo: "", status: "confirmed" },
-  { name: "Niko", tecnica: 80, pase: 65, definicion: 70, defensa: 60, fisico: 70, inteligencia: 65, compromiso: 70, arquero: 50, photo: "", status: "confirmed" },
-  { name: "Joni", tecnica: 60, pase: 70, definicion: 80, defensa: 40, fisico: 55, inteligencia: 75, compromiso: 60, arquero: 50, photo: "", status: "confirmed" },
-  { name: "Nico", tecnica: 80, pase: 65, definicion: 70, defensa: 60, fisico: 75, inteligencia: 70, compromiso: 70, arquero: 50, photo: "", status: "confirmed" },
-  { name: "Leo 🇮🇹", tecnica: 75, pase: 80, definicion: 85, defensa: 40, fisico: 70, inteligencia: 80, compromiso: 65, arquero: 50, photo: "", status: "confirmed" },
-  { name: "Tiziano", tecnica: 70, pase: 70, definicion: 70, defensa: 75, fisico: 80, inteligencia: 70, compromiso: 70, arquero: 50, photo: "", status: "confirmed" },
-  { name: "Facu", tecnica: 80, pase: 60, definicion: 70, defensa: 60, fisico: 60, inteligencia: 60, compromiso: 60, arquero: 50, photo: "", status: "confirmed" },
-  { name: "Cuchu", tecnica: 50, pase: 65, definicion: 60, defensa: 60, fisico: 50, inteligencia: 50, compromiso: 70, arquero: 50, photo: "", status: "confirmed" },
-  { name: "Dylan", tecnica: 75, pase: 70, definicion: 70, defensa: 70, fisico: 75, inteligencia: 70, compromiso: 65, arquero: 50, photo: "", status: "confirmed" }
+  {
+    "name": "Flego",
+    "tecnica": 70,
+    "pase": 60,
+    "definicion": 80,
+    "defensa": 80,
+    "fisico": 80,
+    "inteligencia": 75,
+    "compromiso": 85,
+    "control": 65,
+    "entrada": 80,
+    "marca": 80,
+    "regate": 70,
+    "tiroLargo": 75,
+    "anticipacion": 78,
+    "calma": 75,
+    "decisiones": 68,
+    "disciplina": 82,
+    "intensidad": 82,
+    "juegoEquipo": 72,
+    "movimientoSinPelota": 78,
+    "visionJuego": 68,
+    "aceleracion": 80,
+    "agilidad": 75,
+    "fuerza": 80,
+    "resistencia": 80,
+    "velocidad": 80,
+    "arquero": 50,
+    "photo": "",
+    "status": "confirmed"
+  },
+  {
+    "name": "Gabi",
+    "tecnica": 60,
+    "pase": 60,
+    "definicion": 70,
+    "defensa": 80,
+    "fisico": 65,
+    "inteligencia": 65,
+    "compromiso": 85,
+    "control": 60,
+    "entrada": 80,
+    "marca": 80,
+    "regate": 60,
+    "tiroLargo": 65,
+    "anticipacion": 72,
+    "calma": 65,
+    "decisiones": 62,
+    "disciplina": 82,
+    "intensidad": 75,
+    "juegoEquipo": 72,
+    "movimientoSinPelota": 65,
+    "visionJuego": 62,
+    "aceleracion": 65,
+    "agilidad": 62,
+    "fuerza": 72,
+    "resistencia": 65,
+    "velocidad": 65,
+    "arquero": 50,
+    "photo": "",
+    "status": "confirmed"
+  },
+  {
+    "name": "Rodri",
+    "tecnica": 80,
+    "pase": 70,
+    "definicion": 85,
+    "defensa": 50,
+    "fisico": 60,
+    "inteligencia": 65,
+    "compromiso": 85,
+    "control": 75,
+    "entrada": 50,
+    "marca": 50,
+    "regate": 80,
+    "tiroLargo": 82,
+    "anticipacion": 58,
+    "calma": 65,
+    "decisiones": 68,
+    "disciplina": 68,
+    "intensidad": 72,
+    "juegoEquipo": 78,
+    "movimientoSinPelota": 62,
+    "visionJuego": 68,
+    "aceleracion": 60,
+    "agilidad": 70,
+    "fuerza": 55,
+    "resistencia": 60,
+    "velocidad": 60,
+    "arquero": 50,
+    "photo": "",
+    "status": "confirmed"
+  },
+  {
+    "name": "Rober",
+    "tecnica": 75,
+    "pase": 70,
+    "definicion": 80,
+    "defensa": 80,
+    "fisico": 65,
+    "inteligencia": 70,
+    "compromiso": 85,
+    "control": 72,
+    "entrada": 80,
+    "marca": 80,
+    "regate": 75,
+    "tiroLargo": 78,
+    "anticipacion": 75,
+    "calma": 70,
+    "decisiones": 70,
+    "disciplina": 82,
+    "intensidad": 75,
+    "juegoEquipo": 78,
+    "movimientoSinPelota": 68,
+    "visionJuego": 70,
+    "aceleracion": 65,
+    "agilidad": 70,
+    "fuerza": 72,
+    "resistencia": 65,
+    "velocidad": 65,
+    "arquero": 50,
+    "photo": "",
+    "status": "confirmed"
+  },
+  {
+    "name": "Cabe",
+    "tecnica": 65,
+    "pase": 65,
+    "definicion": 75,
+    "defensa": 60,
+    "fisico": 55,
+    "inteligencia": 60,
+    "compromiso": 75,
+    "control": 65,
+    "entrada": 60,
+    "marca": 60,
+    "regate": 65,
+    "tiroLargo": 70,
+    "anticipacion": 60,
+    "calma": 60,
+    "decisiones": 62,
+    "disciplina": 68,
+    "intensidad": 65,
+    "juegoEquipo": 70,
+    "movimientoSinPelota": 58,
+    "visionJuego": 62,
+    "aceleracion": 55,
+    "agilidad": 60,
+    "fuerza": 58,
+    "resistencia": 55,
+    "velocidad": 55,
+    "arquero": 50,
+    "photo": "",
+    "status": "confirmed"
+  },
+  {
+    "name": "Carlitos",
+    "tecnica": 70,
+    "pase": 70,
+    "definicion": 70,
+    "defensa": 80,
+    "fisico": 85,
+    "inteligencia": 65,
+    "compromiso": 85,
+    "control": 70,
+    "entrada": 80,
+    "marca": 80,
+    "regate": 70,
+    "tiroLargo": 70,
+    "anticipacion": 72,
+    "calma": 65,
+    "decisiones": 68,
+    "disciplina": 82,
+    "intensidad": 85,
+    "juegoEquipo": 78,
+    "movimientoSinPelota": 75,
+    "visionJuego": 68,
+    "aceleracion": 85,
+    "agilidad": 78,
+    "fuerza": 82,
+    "resistencia": 85,
+    "velocidad": 85,
+    "arquero": 50,
+    "photo": "",
+    "status": "confirmed"
+  },
+  {
+    "name": "Niko",
+    "tecnica": 80,
+    "pase": 65,
+    "definicion": 70,
+    "defensa": 60,
+    "fisico": 70,
+    "inteligencia": 65,
+    "compromiso": 70,
+    "control": 72,
+    "entrada": 60,
+    "marca": 60,
+    "regate": 80,
+    "tiroLargo": 75,
+    "anticipacion": 62,
+    "calma": 65,
+    "decisiones": 65,
+    "disciplina": 65,
+    "intensidad": 70,
+    "juegoEquipo": 68,
+    "movimientoSinPelota": 68,
+    "visionJuego": 65,
+    "aceleracion": 70,
+    "agilidad": 75,
+    "fuerza": 65,
+    "resistencia": 70,
+    "velocidad": 70,
+    "arquero": 50,
+    "photo": "",
+    "status": "confirmed"
+  },
+  {
+    "name": "Joni",
+    "tecnica": 60,
+    "pase": 70,
+    "definicion": 80,
+    "defensa": 40,
+    "fisico": 55,
+    "inteligencia": 75,
+    "compromiso": 60,
+    "control": 65,
+    "entrada": 40,
+    "marca": 40,
+    "regate": 60,
+    "tiroLargo": 70,
+    "anticipacion": 58,
+    "calma": 75,
+    "decisiones": 72,
+    "disciplina": 50,
+    "intensidad": 58,
+    "juegoEquipo": 65,
+    "movimientoSinPelota": 65,
+    "visionJuego": 72,
+    "aceleracion": 55,
+    "agilidad": 58,
+    "fuerza": 48,
+    "resistencia": 55,
+    "velocidad": 55,
+    "arquero": 50,
+    "photo": "",
+    "status": "confirmed"
+  },
+  {
+    "name": "Nico",
+    "tecnica": 80,
+    "pase": 65,
+    "definicion": 70,
+    "defensa": 60,
+    "fisico": 75,
+    "inteligencia": 70,
+    "compromiso": 70,
+    "control": 72,
+    "entrada": 60,
+    "marca": 60,
+    "regate": 80,
+    "tiroLargo": 75,
+    "anticipacion": 65,
+    "calma": 70,
+    "decisiones": 68,
+    "disciplina": 65,
+    "intensidad": 72,
+    "juegoEquipo": 68,
+    "movimientoSinPelota": 72,
+    "visionJuego": 68,
+    "aceleracion": 75,
+    "agilidad": 78,
+    "fuerza": 68,
+    "resistencia": 75,
+    "velocidad": 75,
+    "arquero": 50,
+    "photo": "",
+    "status": "confirmed"
+  },
+  {
+    "name": "Leo 🇮🇹",
+    "tecnica": 75,
+    "pase": 80,
+    "definicion": 85,
+    "defensa": 40,
+    "fisico": 70,
+    "inteligencia": 80,
+    "compromiso": 65,
+    "control": 78,
+    "entrada": 40,
+    "marca": 40,
+    "regate": 75,
+    "tiroLargo": 80,
+    "anticipacion": 60,
+    "calma": 80,
+    "decisiones": 80,
+    "disciplina": 52,
+    "intensidad": 68,
+    "juegoEquipo": 72,
+    "movimientoSinPelota": 75,
+    "visionJuego": 80,
+    "aceleracion": 70,
+    "agilidad": 72,
+    "fuerza": 55,
+    "resistencia": 70,
+    "velocidad": 70,
+    "arquero": 50,
+    "photo": "",
+    "status": "confirmed"
+  },
+  {
+    "name": "Tiziano",
+    "tecnica": 70,
+    "pase": 70,
+    "definicion": 70,
+    "defensa": 75,
+    "fisico": 80,
+    "inteligencia": 70,
+    "compromiso": 70,
+    "control": 70,
+    "entrada": 75,
+    "marca": 75,
+    "regate": 70,
+    "tiroLargo": 70,
+    "anticipacion": 72,
+    "calma": 70,
+    "decisiones": 70,
+    "disciplina": 72,
+    "intensidad": 75,
+    "juegoEquipo": 70,
+    "movimientoSinPelota": 75,
+    "visionJuego": 70,
+    "aceleracion": 80,
+    "agilidad": 75,
+    "fuerza": 78,
+    "resistencia": 80,
+    "velocidad": 80,
+    "arquero": 50,
+    "photo": "",
+    "status": "confirmed"
+  },
+  {
+    "name": "Facu",
+    "tecnica": 80,
+    "pase": 60,
+    "definicion": 70,
+    "defensa": 60,
+    "fisico": 60,
+    "inteligencia": 60,
+    "compromiso": 60,
+    "control": 70,
+    "entrada": 60,
+    "marca": 60,
+    "regate": 80,
+    "tiroLargo": 75,
+    "anticipacion": 60,
+    "calma": 60,
+    "decisiones": 60,
+    "disciplina": 60,
+    "intensidad": 60,
+    "juegoEquipo": 60,
+    "movimientoSinPelota": 60,
+    "visionJuego": 60,
+    "aceleracion": 60,
+    "agilidad": 70,
+    "fuerza": 60,
+    "resistencia": 60,
+    "velocidad": 60,
+    "arquero": 50,
+    "photo": "",
+    "status": "confirmed"
+  },
+  {
+    "name": "Cuchu",
+    "tecnica": 50,
+    "pase": 65,
+    "definicion": 60,
+    "defensa": 60,
+    "fisico": 50,
+    "inteligencia": 50,
+    "compromiso": 70,
+    "control": 58,
+    "entrada": 60,
+    "marca": 60,
+    "regate": 50,
+    "tiroLargo": 55,
+    "anticipacion": 55,
+    "calma": 50,
+    "decisiones": 58,
+    "disciplina": 65,
+    "intensidad": 60,
+    "juegoEquipo": 68,
+    "movimientoSinPelota": 50,
+    "visionJuego": 58,
+    "aceleracion": 50,
+    "agilidad": 50,
+    "fuerza": 55,
+    "resistencia": 50,
+    "velocidad": 50,
+    "arquero": 50,
+    "photo": "",
+    "status": "confirmed"
+  },
+  {
+    "name": "Dylan",
+    "tecnica": 75,
+    "pase": 70,
+    "definicion": 70,
+    "defensa": 70,
+    "fisico": 75,
+    "inteligencia": 70,
+    "compromiso": 65,
+    "control": 72,
+    "entrada": 70,
+    "marca": 70,
+    "regate": 75,
+    "tiroLargo": 72,
+    "anticipacion": 70,
+    "calma": 70,
+    "decisiones": 70,
+    "disciplina": 68,
+    "intensidad": 70,
+    "juegoEquipo": 68,
+    "movimientoSinPelota": 72,
+    "visionJuego": 70,
+    "aceleracion": 75,
+    "agilidad": 75,
+    "fuerza": 72,
+    "resistencia": 75,
+    "velocidad": 75,
+    "arquero": 50,
+    "photo": "",
+    "status": "confirmed"
+  }
 ];
 
 var state = {
   isEditor: false,
   players: [],
-  teams: { a: [], b: [] },
+  teams: { a: [], b: [], positions: {} },
   match: {
     day: "Miércoles",
     arrival: "22:00",
@@ -33,21 +454,64 @@ var state = {
   }
 };
 
-var statConfig = [
-  ["tecnica", "Técnica", "#35e875"],
-  ["pase", "Pase", "#4ca8ff"],
-  ["definicion", "Def.", "#ffd43b"],
-  ["defensa", "Defensa", "#ff5353"],
-  ["fisico", "Físico", "#9c6bff"],
-  ["inteligencia", "Intel.", "#32d4d9"],
-  ["compromiso", "Comp.", "#ff5bae"]
+var statGroups = [
+  {
+    title: "Stats existentes",
+    stats: [
+      ["tecnica", "Técnica", "#35e875"],
+      ["pase", "Pase", "#4ca8ff"],
+      ["definicion", "Definición", "#ffd43b"],
+      ["defensa", "Defensa", "#ff5353"],
+      ["fisico", "Físico", "#9c6bff"],
+      ["inteligencia", "Inteligencia", "#32d4d9"],
+      ["compromiso", "Compromiso", "#ff5bae"],
+      ["arquero", "Arquero", "#ffffff"]
+    ]
+  },
+  {
+    title: "Técnicos",
+    stats: [
+      ["control", "Control", "#35e875"],
+      ["entrada", "Entrada / Tacle", "#ff5353"],
+      ["marca", "Marca", "#ff7a7a"],
+      ["regate", "Regate", "#4ca8ff"],
+      ["tiroLargo", "Tiro largo", "#ffd43b"]
+    ]
+  },
+  {
+    title: "Mentales",
+    stats: [
+      ["anticipacion", "Anticipación", "#32d4d9"],
+      ["calma", "Calma", "#8be9fd"],
+      ["decisiones", "Decisiones", "#35e875"],
+      ["disciplina", "Disciplina", "#ff5bae"],
+      ["intensidad", "Intensidad", "#ffd43b"],
+      ["juegoEquipo", "Juego en equipo", "#4ca8ff"],
+      ["movimientoSinPelota", "Movimiento sin pelota", "#9c6bff"],
+      ["visionJuego", "Visión de juego", "#32d4d9"]
+    ]
+  },
+  {
+    title: "Físicos",
+    stats: [
+      ["aceleracion", "Aceleración", "#35e875"],
+      ["agilidad", "Agilidad", "#4ca8ff"],
+      ["fuerza", "Fuerza", "#ff5353"],
+      ["resistencia", "Resistencia", "#ffd43b"],
+      ["velocidad", "Velocidad", "#9c6bff"]
+    ]
+  }
 ];
 
+var statConfig = statGroups.reduce(function(list, group) {
+  return list.concat(group.stats);
+}, []);
+
 var compareConfig = [
-  ["Ataque", ["tecnica", "pase", "definicion"]],
-  ["Defensa", ["defensa"]],
-  ["Físico", ["fisico"]],
-  ["Táctica", ["inteligencia", "compromiso"]]
+  ["Ataque", ["definicion", "regate", "tiroLargo", "control"]],
+  ["Defensa", ["defensa", "entrada", "marca", "anticipacion"]],
+  ["Físico", ["fisico", "aceleracion", "agilidad", "fuerza", "resistencia", "velocidad"]],
+  ["Táctica", ["inteligencia", "decisiones", "disciplina", "visionJuego", "juegoEquipo"]]
 ];
 
 var colorLabel = {
@@ -57,13 +521,15 @@ var colorLabel = {
 };
 
 function init() {
-  var saved = localStorage.getItem("bosteros_manager_data_v2");
+  var saved = localStorage.getItem(STORAGE_KEY);
+
   if (saved) {
     try {
       var parsed = JSON.parse(saved);
       state.players = parsed.players || defaultPlayers;
       state.match = parsed.match || state.match;
       state.teams = parsed.teams || state.teams;
+      if (!state.teams.positions) state.teams.positions = {};
     } catch (e) {
       state.players = defaultPlayers;
     }
@@ -72,14 +538,65 @@ function init() {
     saveData();
   }
 
+  normalizePlayers();
   bindEvents();
   setNextWednesdayDate();
   renderAll();
 }
 
+
+function normalizePlayers() {
+  state.players = state.players.map(function(p) {
+    var base = {
+      tecnica: p.tecnica || 50,
+      pase: p.pase || 50,
+      definicion: p.definicion || 50,
+      defensa: p.defensa || 50,
+      fisico: p.fisico || 50,
+      inteligencia: p.inteligencia || 50,
+      compromiso: p.compromiso || 50
+    };
+
+    var defaults = {
+      control: Math.round((base.tecnica + base.pase) / 2),
+      entrada: base.defensa,
+      marca: base.defensa,
+      regate: base.tecnica,
+      tiroLargo: Math.round((base.definicion + base.tecnica) / 2),
+      anticipacion: Math.round((base.defensa + base.inteligencia) / 2),
+      calma: base.inteligencia,
+      decisiones: Math.round((base.inteligencia + base.pase) / 2),
+      disciplina: Math.round((base.defensa + base.compromiso) / 2),
+      intensidad: Math.round((base.fisico + base.compromiso) / 2),
+      juegoEquipo: Math.round((base.pase + base.compromiso) / 2),
+      movimientoSinPelota: Math.round((base.inteligencia + base.fisico) / 2),
+      visionJuego: Math.round((base.inteligencia + base.pase) / 2),
+      aceleracion: base.fisico,
+      agilidad: Math.round((base.fisico + base.tecnica) / 2),
+      fuerza: Math.round((base.fisico + base.defensa) / 2),
+      resistencia: base.fisico,
+      velocidad: base.fisico,
+      arquero: p.arquero || 50
+    };
+
+    Object.keys(defaults).forEach(function(key) {
+      if (p[key] === undefined || p[key] === null || p[key] === "") {
+        p[key] = defaults[key];
+      }
+    });
+
+    if (!p.status) p.status = "confirmed";
+    if (!p.photo) p.photo = "";
+    return p;
+  });
+
+  saveData();
+}
+
+
 function saveData() {
   try {
-    localStorage.setItem("bosteros_manager_data_v2", JSON.stringify({
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
       players: state.players,
       match: state.match,
       teams: state.teams
@@ -92,6 +609,10 @@ function saveData() {
 function bindEvents() {
   document.querySelectorAll(".nav-btn").forEach(function(btn) {
     btn.addEventListener("click", function() { showView(btn.dataset.view); });
+  });
+
+  document.querySelectorAll("[data-view-target]").forEach(function(btn) {
+    btn.addEventListener("click", function() { showView(btn.dataset.viewTarget); });
   });
 
   document.getElementById("editorBtn").addEventListener("click", unlockEditor);
@@ -119,7 +640,7 @@ function showView(id) {
   document.getElementById(id).classList.add("active");
 
   var titles = {
-    dashboard: ["Dashboard", "Próximo partido, convocados y resumen general."],
+    dashboard: ["Dashboard", "Próximo partido, cancha y jugadores."],
     players: ["Jugadores", "Base de datos, fotos y aptitudes."],
     match: ["Partido", "Convocados, horarios, cancha y camisetas."],
     teams: ["Equipos", "Formación sobre la cancha."]
@@ -161,6 +682,7 @@ function renderEditorMode() {
 
   renderPlayers();
   renderCallList();
+  renderTeams();
 }
 
 function setNextWednesdayDate() {
@@ -189,8 +711,15 @@ function renderAll() {
 }
 
 function overall(p) {
-  var total = p.tecnica + p.pase + p.definicion + p.defensa + p.fisico + p.inteligencia + p.compromiso;
-  return Math.round(total / 7);
+  var keys = statConfig
+    .map(function(s) { return s[0]; })
+    .filter(function(key) { return key !== "arquero"; });
+
+  var total = keys.reduce(function(sum, key) {
+    return sum + Number(p[key] || 50);
+  }, 0);
+
+  return Math.round(total / keys.length);
 }
 
 function initials(name) {
@@ -217,10 +746,22 @@ function renderDashboard() {
   document.getElementById("dashboardPlayers").innerHTML = state.players.map(function(p, i) {
     return playerCardHTML(p, i, false);
   }).join("");
+
+  renderDashboardPitch();
 }
 
 function playerCardHTML(p, i, editable) {
-  var stats = statConfig.map(function(s) {
+  var summaryStats = [
+    ["tecnica", "Técnica", "#35e875"],
+    ["pase", "Pase", "#4ca8ff"],
+    ["definicion", "Def.", "#ffd43b"],
+    ["defensa", "Defensa", "#ff5353"],
+    ["fisico", "Físico", "#9c6bff"],
+    ["inteligencia", "Intel.", "#32d4d9"],
+    ["compromiso", "Comp.", "#ff5bae"]
+  ];
+
+  var stats = summaryStats.map(function(s) {
     var key = s[0], label = s[1], color = s[2];
     return '<div class="stat-row"><span>' + label + '</span><div class="bar"><i style="--w:' + p[key] + '%;--c:' + color + '"></i></div><b>' + p[key] + '</b></div>';
   }).join("");
@@ -234,6 +775,7 @@ function playerCardHTML(p, i, editable) {
     '<div class="player-top">' + avatar(p) +
     '<div><h4>' + p.name + '</h4><div class="ovr">' + overall(p) + ' OVR</div></div></div>' +
     stats +
+    '<div class="card-note">Editar para ver todos los atributos.</div>' +
     actions +
     '</article>';
 }
@@ -297,6 +839,22 @@ function saveMatchFromForm() {
   alert("Partido guardado");
 }
 
+
+function emptyPlayerTemplate() {
+  var p = {
+    name: "",
+    photo: "",
+    status: "confirmed"
+  };
+
+  statConfig.forEach(function(stat) {
+    p[stat[0]] = 50;
+  });
+
+  return p;
+}
+
+
 function openPlayerModal(index) {
   if (!state.isEditor) {
     alert("Necesitás activar modo editor");
@@ -306,7 +864,7 @@ function openPlayerModal(index) {
   document.getElementById("playerModal").classList.remove("hidden");
   document.getElementById("editingIndex").value = "";
 
-  var empty = { name: "", tecnica: 50, pase: 50, definicion: 50, defensa: 50, fisico: 50, inteligencia: 50, compromiso: 50, arquero: 50, photo: "" };
+  var empty = emptyPlayerTemplate();
 
   if (typeof index === "number") {
     document.getElementById("modalTitle").textContent = "Editar jugador";
@@ -318,10 +876,31 @@ function openPlayerModal(index) {
   }
 }
 
+function renderStatsEditor() {
+  var container = document.getElementById("statsEditor");
+
+  container.innerHTML = statGroups.map(function(group) {
+    return '<div class="stats-group">' +
+      '<h4>' + group.title + '</h4>' +
+      '<div class="form-grid">' +
+      group.stats.map(function(stat) {
+        var key = stat[0];
+        var label = stat[1];
+        return '<label>' + label + '<input id="' + key + '" type="number" min="1" max="100" /></label>';
+      }).join("") +
+      '</div>' +
+    '</div>';
+  }).join("");
+}
+
 function fillModal(p) {
+  renderStatsEditor();
+
   document.getElementById("playerName").value = p.name;
-  ["tecnica", "pase", "definicion", "defensa", "fisico", "inteligencia", "compromiso", "arquero"].forEach(function(k) {
-    document.getElementById(k).value = p[k] || 50;
+
+  statConfig.forEach(function(stat) {
+    var key = stat[0];
+    document.getElementById(key).value = p[key] || 50;
   });
 
   var preview = document.getElementById("photoPreview");
@@ -340,7 +919,7 @@ function deletePlayer(index) {
   if (!state.isEditor) return;
   if (!confirm("¿Borrar a " + state.players[index].name + "?")) return;
   state.players.splice(index, 1);
-  state.teams = { a: [], b: [] };
+  state.teams = { a: [], b: [], positions: {} };
   saveData();
   renderAll();
 }
@@ -382,17 +961,13 @@ function savePlayerFromModal() {
 
   var p = {
     name: name,
-    tecnica: readNumber("tecnica"),
-    pase: readNumber("pase"),
-    definicion: readNumber("definicion"),
-    defensa: readNumber("defensa"),
-    fisico: readNumber("fisico"),
-    inteligencia: readNumber("inteligencia"),
-    compromiso: readNumber("compromiso"),
-    arquero: readNumber("arquero"),
     photo: document.getElementById("photoPreview").dataset.photo || "",
     status: "confirmed"
   };
+
+  statConfig.forEach(function(stat) {
+    p[stat[0]] = readNumber(stat[0]);
+  });
 
   var editingIndex = document.getElementById("editingIndex").value;
   if (editingIndex !== "") {
@@ -438,10 +1013,6 @@ function makeTeams(randomize) {
     return;
   }
 
-  if (randomize) {
-    confirmed.sort(function(){ return Math.random() - 0.5; });
-  }
-
   confirmed.sort(function(a, b){
     if (randomize) return Math.random() - 0.5;
     return overall(b.player) - overall(a.player);
@@ -460,9 +1031,10 @@ function makeTeams(randomize) {
     else b.push(item.index);
   });
 
-  state.teams = { a: a, b: b };
+  state.teams = { a: a, b: b, positions: defaultPositionsForTeams(a, b) };
   saveData();
   renderTeams();
+  renderDashboard();
   showView("teams");
 }
 
@@ -470,10 +1042,29 @@ function resetTeams() {
   if (!state.isEditor) return;
   if (!confirm("¿Resetear equipos? Se borra la formación actual.")) return;
 
-  state.teams = { a: [], b: [] };
+  state.teams = { a: [], b: [], positions: {} };
   saveData();
   renderTeams();
+  renderDashboardPitch();
   document.getElementById("sharePanel").classList.add("hidden");
+}
+
+function defaultPositionsForTeams(a, b) {
+  var positionsA = [[12,50], [25,24], [25,50], [25,76], [40,34], [40,66], [47,50], [34,50], [18,38], [18,62]];
+  var positionsB = [[88,50], [75,24], [75,50], [75,76], [60,34], [60,66], [53,50], [66,50], [82,38], [82,62]];
+  var positions = {};
+
+  a.forEach(function(index, i) {
+    var pos = positionsA[i] || [18 + (i % 4) * 8, 18 + Math.floor(i / 4) * 16];
+    positions[index] = { x: pos[0], y: pos[1] };
+  });
+
+  b.forEach(function(index, i) {
+    var pos = positionsB[i] || [82 - (i % 4) * 8, 18 + Math.floor(i / 4) * 16];
+    positions[index] = { x: pos[0], y: pos[1] };
+  });
+
+  return positions;
 }
 
 function teamAverage(indexes) {
@@ -497,20 +1088,34 @@ function renderTeams() {
   var labelA = colorLabel[state.match.teamAColor] || "Equipo A";
   var labelB = colorLabel[state.match.teamBColor] || "Equipo B";
 
-  document.getElementById("teamALabel").className = "shirt-tag " + state.match.teamAColor;
-  document.getElementById("teamBLabel").className = "shirt-tag " + state.match.teamBColor;
-  document.getElementById("teamALabel").textContent = labelA;
-  document.getElementById("teamBLabel").textContent = labelB;
-  document.getElementById("teamAListTitle").textContent = labelA;
-  document.getElementById("teamBListTitle").textContent = labelB;
-  document.getElementById("teamACompareTitle").textContent = labelA;
-  document.getElementById("teamBCompareTitle").textContent = labelB;
+  setTeamLabels(labelA, labelB);
 
-  renderPitch(a, b);
+  renderPitch("pitchPlayers", a, b, true);
   renderTeamList("teamAList", a);
   renderTeamList("teamBList", b);
   renderTeamCompare("teamACompare", a);
   renderTeamCompare("teamBCompare", b);
+}
+
+function setTeamLabels(labelA, labelB) {
+  ["teamALabel", "dashboardTeamALabel"].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.className = "shirt-tag " + state.match.teamAColor;
+    el.textContent = labelA;
+  });
+
+  ["teamBLabel", "dashboardTeamBLabel"].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.className = "shirt-tag " + state.match.teamBColor;
+    el.textContent = labelB;
+  });
+
+  document.getElementById("teamAListTitle").textContent = labelA;
+  document.getElementById("teamBListTitle").textContent = labelB;
+  document.getElementById("teamACompareTitle").textContent = labelA;
+  document.getElementById("teamBCompareTitle").textContent = labelB;
 }
 
 function teamStatAverage(indexes, keys) {
@@ -533,36 +1138,97 @@ function renderTeamCompare(id, indexes) {
   }).join("");
 }
 
-function renderPitch(a, b) {
-  var positionsA = [[12,50], [25,24], [25,50], [25,76], [40,34], [40,66], [47,50]];
-  var positionsB = [[88,50], [75,24], [75,50], [75,76], [60,34], [60,66], [53,50]];
+function renderDashboardPitch() {
+  var labelA = colorLabel[state.match.teamAColor] || "Equipo A";
+  var labelB = colorLabel[state.match.teamBColor] || "Equipo B";
+  setTeamLabels(labelA, labelB);
+  renderPitch("dashboardPitchPlayers", state.teams.a || [], state.teams.b || [], false);
+}
 
+function renderPitch(containerId, a, b, draggable) {
   var html = "";
 
-  a.forEach(function(index, i) {
-    var p = state.players[index];
-    var pos = positionsA[i] || [20 + i*5, 50];
-    html += pitchPlayerHTML(p, pos, "team-a");
+  a.forEach(function(index) {
+    html += pitchPlayerHTML(index, "team-a", draggable);
   });
 
-  b.forEach(function(index, i) {
-    var p = state.players[index];
-    var pos = positionsB[i] || [80 - i*5, 50];
-    html += pitchPlayerHTML(p, pos, "team-b");
+  b.forEach(function(index) {
+    html += pitchPlayerHTML(index, "team-b", draggable);
   });
 
   if (!html) {
-    html = '<div class="empty-pitch">Todavía no hay equipos generados.</div>';
+    html = '<div class="empty-pitch">Aún no se han generado los equipos.</div>';
   }
 
-  document.getElementById("pitchPlayers").innerHTML = html;
+  document.getElementById(containerId).innerHTML = html;
+
+  if (draggable && state.isEditor) {
+    bindPitchDrag();
+  }
 }
 
-function pitchPlayerHTML(p, pos, teamClass) {
-  return '<div class="pitch-player ' + teamClass + '" style="left:' + pos[0] + '%; top:' + pos[1] + '%">' +
+function pitchPlayerHTML(index, teamClass, draggable) {
+  var p = state.players[index];
+  var pos = (state.teams.positions && state.teams.positions[index]) || { x: 50, y: 50 };
+  var dragClass = draggable && state.isEditor ? " draggable" : "";
+
+  return '<div class="pitch-player ' + teamClass + dragClass + '" data-index="' + index + '" style="left:' + pos.x + '%; top:' + pos.y + '%">' +
     avatar(p) +
     '<div class="name-tag">' + p.name + '</div>' +
   '</div>';
+}
+
+function bindPitchDrag() {
+  var pitch = document.getElementById("mainPitch");
+  var active = null;
+
+  document.querySelectorAll("#pitchPlayers .pitch-player").forEach(function(playerEl) {
+    playerEl.addEventListener("pointerdown", function(e) {
+      if (!state.isEditor) return;
+
+      active = playerEl;
+      active.classList.add("dragging");
+      active.setPointerCapture(e.pointerId);
+      e.preventDefault();
+    });
+
+    playerEl.addEventListener("pointermove", function(e) {
+      if (!active || active !== playerEl) return;
+      movePlayerOnPitch(e, pitch, active, false);
+    });
+
+    playerEl.addEventListener("pointerup", function(e) {
+      if (!active || active !== playerEl) return;
+      movePlayerOnPitch(e, pitch, active, true);
+      active.classList.remove("dragging");
+      active = null;
+    });
+
+    playerEl.addEventListener("pointercancel", function() {
+      if (active) active.classList.remove("dragging");
+      active = null;
+    });
+  });
+}
+
+function movePlayerOnPitch(e, pitch, el, shouldSave) {
+  var rect = pitch.getBoundingClientRect();
+  var x = ((e.clientX - rect.left) / rect.width) * 100;
+  var y = ((e.clientY - rect.top) / rect.height) * 100;
+
+  x = Math.max(4, Math.min(96, x));
+  y = Math.max(6, Math.min(94, y));
+
+  el.style.left = x + "%";
+  el.style.top = y + "%";
+
+  if (shouldSave) {
+    var index = el.dataset.index;
+    if (!state.teams.positions) state.teams.positions = {};
+    state.teams.positions[index] = { x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10 };
+    saveData();
+    renderDashboardPitch();
+  }
 }
 
 function renderTeamList(id, indexes) {
@@ -578,22 +1244,22 @@ function buildShareText() {
   var labelA = colorLabel[state.match.teamAColor] || "Equipo A";
   var labelB = colorLabel[state.match.teamBColor] || "Equipo B";
 
-  var text = "⚽ LOS BOSTEROS - EQUIPOS\\n\\n";
-  text += "🏟️ " + state.match.place + "\\n";
-  text += "🕖 Llegada: " + state.match.arrival + " · Inicio: " + state.match.start + "\\n";
-  text += "💶 Costo: " + state.match.cost + "€\\n\\n";
+  var text = "⚽ LOS BOSTEROS - EQUIPOS\n\n";
+  text += "🏟️ " + state.match.place + "\n";
+  text += "🕖 Llegada: " + state.match.arrival + " · Inicio: " + state.match.start + "\n";
+  text += "💶 Costo: " + state.match.cost + "€\n\n";
 
-  text += "🟡 " + labelA + " (" + teamAverage(a) + " OVR)\\n";
+  text += "🟡 " + labelA + " (" + teamAverage(a) + " OVR)\n";
   a.forEach(function(index) {
-    text += "• " + state.players[index].name + "\\n";
+    text += "• " + state.players[index].name + "\n";
   });
 
-  text += "\\n🔵 " + labelB + " (" + teamAverage(b) + " OVR)\\n";
+  text += "\n🔵 " + labelB + " (" + teamAverage(b) + " OVR)\n";
   b.forEach(function(index) {
-    text += "• " + state.players[index].name + "\\n";
+    text += "• " + state.players[index].name + "\n";
   });
 
-  text += "\\n📍 Mapa: " + state.match.map;
+  text += "\n📍 Mapa: " + state.match.map;
   return text;
 }
 
