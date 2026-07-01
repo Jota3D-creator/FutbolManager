@@ -2,71 +2,272 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Fútbol Manager Test</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fútbol 7 Manager</title>
+
   <style>
     body {
+      margin: 0;
+      font-family: Arial, sans-serif;
       background: #05080d;
       color: white;
-      font-family: Arial, sans-serif;
-      padding: 30px;
+      padding: 24px;
+    }
+
+    h1 {
+      color: #27e36d;
+      margin-bottom: 4px;
+    }
+
+    .subtitle {
+      color: #8f9aaa;
+      margin-bottom: 24px;
+    }
+
+    .panel {
+      background: #0b121b;
+      border: 1px solid #263241;
+      border-radius: 18px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-top: 12px;
+      font-weight: bold;
+      color: #dce5ef;
+    }
+
+    input {
+      width: 100%;
+      max-width: 420px;
+      padding: 12px;
+      margin-top: 6px;
+      border-radius: 10px;
+      border: 1px solid #263241;
+      background: #111b27;
+      color: white;
     }
 
     button {
       background: #27e36d;
+      color: #031007;
       border: 0;
-      padding: 14px 20px;
-      margin: 8px;
+      padding: 13px 18px;
+      margin-top: 16px;
       border-radius: 10px;
       font-weight: bold;
       cursor: pointer;
     }
 
-    .section {
-      display: none;
-      margin-top: 20px;
-      padding: 20px;
-      background: #111b27;
-      border-radius: 16px;
+    .players-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 14px;
+      margin-top: 16px;
     }
 
-    .active {
-      display: block;
+    .player-card {
+      background: #111b27;
+      border: 1px solid #263241;
+      border-radius: 16px;
+      padding: 16px;
+    }
+
+    .player-card h3 {
+      margin-top: 0;
+      color: #ffffff;
+    }
+
+    .overall {
+      color: #27e36d;
+      font-size: 28px;
+      font-weight: bold;
+      margin-bottom: 12px;
+    }
+
+    .stat {
+      margin: 8px 0;
+      font-size: 14px;
+    }
+
+    .bar {
+      height: 7px;
+      background: #263241;
+      border-radius: 99px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+
+    .bar-fill {
+      height: 100%;
+      background: #27e36d;
+    }
+
+    .delete {
+      background: transparent;
+      color: #ff5b5b;
+      border: 1px solid #ff5b5b;
+      margin-top: 12px;
     }
   </style>
 </head>
 
 <body>
   <h1>Fútbol 7 Manager</h1>
+  <p class="subtitle">Base de jugadores con aptitudes del 1 al 100</p>
 
-  <button onclick="showSection('jugadores')">Base de jugadores</button>
-  <button onclick="showSection('partido')">Armar partido</button>
-  <button onclick="showSection('equipos')">Equipos</button>
+  <div class="panel">
+    <h2>Agregar jugador</h2>
 
-  <div id="jugadores" class="section active">
-    <h2>Base de jugadores</h2>
-    <p>Si ves esto, jugadores funciona.</p>
+    <label>Nombre</label>
+    <input id="name" type="text" placeholder="Ej: Flego">
+
+    <label>Técnica</label>
+    <input id="tecnica" type="number" min="1" max="100">
+
+    <label>Pase</label>
+    <input id="pase" type="number" min="1" max="100">
+
+    <label>Definición</label>
+    <input id="definicion" type="number" min="1" max="100">
+
+    <label>Defensa</label>
+    <input id="defensa" type="number" min="1" max="100">
+
+    <label>Estado físico</label>
+    <input id="fisico" type="number" min="1" max="100">
+
+    <label>Inteligencia táctica</label>
+    <input id="inteligencia" type="number" min="1" max="100">
+
+    <label>Compromiso</label>
+    <input id="compromiso" type="number" min="1" max="100">
+
+    <button onclick="addPlayer()">Agregar jugador</button>
   </div>
 
-  <div id="partido" class="section">
-    <h2>Armar partido</h2>
-    <p>Si ves esto, partido funciona.</p>
-  </div>
-
-  <div id="equipos" class="section">
-    <h2>Equipos</h2>
-    <p>Si ves esto, equipos funciona.</p>
+  <div class="panel">
+    <h2>Jugadores cargados</h2>
+    <div id="playersList" class="players-grid"></div>
   </div>
 
   <script>
-    alert("JS cargado correctamente");
+    var players = [];
 
-    function showSection(id) {
-      document.querySelectorAll(".section").forEach(function(section) {
-        section.classList.remove("active");
-      });
+    function loadPlayers() {
+      var saved = localStorage.getItem("futbol7_players");
 
-      document.getElementById(id).classList.add("active");
+      if (saved) {
+        players = JSON.parse(saved);
+      }
+
+      renderPlayers();
     }
+
+    function savePlayers() {
+      localStorage.setItem("futbol7_players", JSON.stringify(players));
+    }
+
+    function getValue(id) {
+      return Number(document.getElementById(id).value);
+    }
+
+    function addPlayer() {
+      var name = document.getElementById("name").value.trim();
+
+      if (name === "") {
+        alert("Poné el nombre del jugador");
+        return;
+      }
+
+      var player = {
+        name: name,
+        tecnica: getValue("tecnica"),
+        pase: getValue("pase"),
+        definicion: getValue("definicion"),
+        defensa: getValue("defensa"),
+        fisico: getValue("fisico"),
+        inteligencia: getValue("inteligencia"),
+        compromiso: getValue("compromiso")
+      };
+
+      players.push(player);
+      savePlayers();
+      clearForm();
+      renderPlayers();
+    }
+
+    function clearForm() {
+      document.getElementById("name").value = "";
+      document.getElementById("tecnica").value = "";
+      document.getElementById("pase").value = "";
+      document.getElementById("definicion").value = "";
+      document.getElementById("defensa").value = "";
+      document.getElementById("fisico").value = "";
+      document.getElementById("inteligencia").value = "";
+      document.getElementById("compromiso").value = "";
+    }
+
+    function getOverall(player) {
+      var total =
+        player.tecnica +
+        player.pase +
+        player.definicion +
+        player.defensa +
+        player.fisico +
+        player.inteligencia +
+        player.compromiso;
+
+      return Math.round(total / 7);
+    }
+
+    function renderPlayers() {
+      var container = document.getElementById("playersList");
+      container.innerHTML = "";
+
+      for (var i = 0; i < players.length; i++) {
+        var player = players[i];
+        var overall = getOverall(player);
+
+        container.innerHTML += `
+          <div class="player-card">
+            <h3>${player.name}</h3>
+            <div class="overall">${overall} OVR</div>
+
+            ${renderStat("Técnica", player.tecnica)}
+            ${renderStat("Pase", player.pase)}
+            ${renderStat("Definición", player.definicion)}
+            ${renderStat("Defensa", player.defensa)}
+            ${renderStat("Físico", player.fisico)}
+            ${renderStat("Inteligencia", player.inteligencia)}
+            ${renderStat("Compromiso", player.compromiso)}
+
+            <button class="delete" onclick="deletePlayer(${i})">Borrar</button>
+          </div>
+        `;
+      }
+    }
+
+    function renderStat(label, value) {
+      return `
+        <div class="stat">
+          ${label}: ${value}
+          <div class="bar">
+            <div class="bar-fill" style="width: ${value}%"></div>
+          </div>
+        </div>
+      `;
+    }
+
+    function deletePlayer(index) {
+      players.splice(index, 1);
+      savePlayers();
+      renderPlayers();
+    }
+
+    loadPlayers();
   </script>
 </body>
 </html>
