@@ -1,20 +1,32 @@
-# Fútbol 7 Manager
+# Fútbol 7 Manager v2
 
-Mini app estática para organizar partidos de fútbol 7 amateur.
+App estática para GitHub Pages.
 
-## Cómo usar
+## Qué incluye
 
-1. Subí estos archivos a un repositorio de GitHub.
-2. Activá GitHub Pages desde Settings > Pages.
-3. Elegí Deploy from branch, branch `main`, carpeta `/root`.
-4. Abrí la URL pública.
+- Base de jugadores.
+- Alta y edición de jugadores.
+- Foto por jugador.
+- 7 aptitudes del 1 al 100.
+- Dashboard de plantel.
+- Creación de partido.
+- Día, hora, cancha y link de Google Maps.
+- Selección de convocados.
+- Color de camiseta por equipo: Boca amarilla, azul o blanca.
+- Generador de equipos balanceados.
+- Persistencia con localStorage.
+- Exportar datos en JSON.
 
-## Archivos
+## Cómo subir a GitHub Pages
 
-- `index.html`: estructura de la app.
-- `style.css`: estilo dark/neón.
-- `app.js`: jugadores, stats y armado de equipos.
+1. Crear un repo nuevo.
+2. Subir `index.html`, `style.css` y `app.js`.
+3. Ir a Settings > Pages.
+4. En Source elegir `Deploy from a branch`.
+5. Branch: `main`.
+6. Folder: `/root`.
+7. Guardar.
 
-## Editar jugadores
+## Importante
 
-Abrí `app.js` y modificá el array `players`.
+Los datos se guardan en el navegador del usuario. Si abrís la app desde otro teléfono o computadora, no vas a ver la misma base salvo que importemos/exportemos JSON en una próxima versión.
