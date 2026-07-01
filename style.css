@@ -677,3 +677,152 @@ select option { background: #101926; }
     padding: 12px;
   }
 }
+
+
+/* v5 sliders */
+.modal-card {
+  width: min(1040px, 100%);
+}
+
+.modal-overall {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+  margin: 10px 0 14px;
+  background: rgba(53,232,117,.07);
+}
+
+.modal-overall span {
+  color: var(--muted);
+  text-transform: uppercase;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.modal-overall strong {
+  color: var(--green);
+  font-size: 24px;
+}
+
+.stats-editor {
+  display: grid;
+  gap: 12px;
+}
+
+.stat-section {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  background: rgba(255,255,255,.025);
+}
+
+.stat-section summary {
+  cursor: pointer;
+  padding: 14px 16px;
+  color: var(--green);
+  font-weight: 900;
+  text-transform: uppercase;
+  font-size: 13px;
+  letter-spacing: .4px;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.stat-section summary::-webkit-details-marker {
+  display: none;
+}
+
+.stat-section summary:after {
+  content: "▾";
+  color: var(--muted);
+}
+
+.stat-section:not([open]) summary:after {
+  content: "▸";
+}
+
+.slider-list {
+  display: grid;
+  gap: 10px;
+  padding: 0 16px 16px;
+}
+
+.slider-row {
+  display: grid;
+  grid-template-columns: 145px 1fr 42px;
+  gap: 12px;
+  align-items: center;
+  color: #dfe7f1;
+  font-size: 13px;
+}
+
+.slider-row input[type="range"] {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  height: 6px;
+  accent-color: var(--green);
+}
+
+.slider-value {
+  text-align: right;
+  color: white;
+  font-weight: 900;
+}
+
+.card-note {
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.category-pill-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.category-pill {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px;
+  background: rgba(255,255,255,.035);
+}
+
+.category-pill span {
+  display: block;
+  color: var(--muted);
+  font-size: 10px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.category-pill strong {
+  color: var(--green);
+}
+
+.stats-group {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .slider-row {
+    grid-template-columns: 1fr 42px;
+    gap: 8px;
+  }
+
+  .slider-row label {
+    grid-column: 1 / -1;
+    margin: 0;
+  }
+
+  .modal-overall strong {
+    font-size: 20px;
+  }
+}

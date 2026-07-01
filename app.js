@@ -1,5 +1,5 @@
 var EDITOR_PASSWORD = "bosteros2026";
-var STORAGE_KEY = "bosteros_manager_data_v4_full_stats";
+var STORAGE_KEY = "bosteros_manager_data_v5_sliders";
 
 var defaultPlayers = [
   {
@@ -514,6 +514,15 @@ var compareConfig = [
   ["Táctica", ["inteligencia", "decisiones", "disciplina", "visionJuego", "juegoEquipo"]]
 ];
 
+var categoryConfig = [
+  ["Técnica", ["tecnica", "control", "regate"]],
+  ["Ataque", ["definicion", "tiroLargo", "movimientoSinPelota"]],
+  ["Defensa", ["defensa", "entrada", "marca", "anticipacion"]],
+  ["Juego", ["pase", "visionJuego", "decisiones", "juegoEquipo"]],
+  ["Físico", ["fisico", "aceleracion", "agilidad", "fuerza", "resistencia", "velocidad"]],
+  ["Mental", ["inteligencia", "calma", "disciplina", "intensidad", "compromiso"]]
+];
+
 var colorLabel = {
   yellow: "Boca amarilla",
   blue: "Boca azul",
@@ -521,7 +530,7 @@ var colorLabel = {
 };
 
 function init() {
-  var saved = localStorage.getItem(STORAGE_KEY);
+  var saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem("bosteros_manager_data_v4_full_stats") || localStorage.getItem("bosteros_manager_data_v3_mobile_drag") || localStorage.getItem("bosteros_manager_data_v2");
 
   if (saved) {
     try {
@@ -624,6 +633,7 @@ function bindEvents() {
   document.getElementById("cancelPlayerBtn").addEventListener("click", closePlayerModal);
   document.getElementById("savePlayerBtn").addEventListener("click", savePlayerFromModal);
   document.getElementById("playerPhoto").addEventListener("change", handlePhotoInput);
+  document.getElementById("playerName").addEventListener("input", updateModalOverallPreview);
 
   document.getElementById("quickGenerateBtn").addEventListener("click", generateTeams);
   document.getElementById("generateTeamsBtn").addEventListener("click", generateTeams);
@@ -710,10 +720,8 @@ function renderAll() {
   renderTeams();
 }
 
-function overall(p) {
-  var keys = statConfig
-    .map(function(s) { return s[0]; })
-    .filter(function(key) { return key !== "arquero"; });
+function averageKeys(p, keys) {
+  if (!keys.length) return 0;
 
   var total = keys.reduce(function(sum, key) {
     return sum + Number(p[key] || 50);
@@ -722,6 +730,17 @@ function overall(p) {
   return Math.round(total / keys.length);
 }
 
+function categoryValue(p, category) {
+  return averageKeys(p, category[1]);
+}
+
+function overall(p) {
+  var total = categoryConfig.reduce(function(sum, category) {
+    return sum + categoryValue(p, category);
+  }, 0);
+
+  return Math.round(total / categoryConfig.length);
+}
 function initials(name) {
   return name.replace("🇮🇹", "").trim().substring(0, 2).toUpperCase();
 }
@@ -751,19 +770,9 @@ function renderDashboard() {
 }
 
 function playerCardHTML(p, i, editable) {
-  var summaryStats = [
-    ["tecnica", "Técnica", "#35e875"],
-    ["pase", "Pase", "#4ca8ff"],
-    ["definicion", "Def.", "#ffd43b"],
-    ["defensa", "Defensa", "#ff5353"],
-    ["fisico", "Físico", "#9c6bff"],
-    ["inteligencia", "Intel.", "#32d4d9"],
-    ["compromiso", "Comp.", "#ff5bae"]
-  ];
-
-  var stats = summaryStats.map(function(s) {
-    var key = s[0], label = s[1], color = s[2];
-    return '<div class="stat-row"><span>' + label + '</span><div class="bar"><i style="--w:' + p[key] + '%;--c:' + color + '"></i></div><b>' + p[key] + '</b></div>';
+  var summary = categoryConfig.map(function(category) {
+    var value = categoryValue(p, category);
+    return '<div class="category-pill"><span>' + category[0] + '</span><strong>' + value + '</strong></div>';
   }).join("");
 
   var actions = "";
@@ -774,12 +783,11 @@ function playerCardHTML(p, i, editable) {
   return '<article class="player-card">' +
     '<div class="player-top">' + avatar(p) +
     '<div><h4>' + p.name + '</h4><div class="ovr">' + overall(p) + ' OVR</div></div></div>' +
-    stats +
-    '<div class="card-note">Editar para ver todos los atributos.</div>' +
+    '<div class="category-pill-grid">' + summary + '</div>' +
+    '<div class="card-note">Resumen condensado. Editar para sliders completos.</div>' +
     actions +
     '</article>';
 }
-
 function renderPlayers() {
   document.getElementById("playersGrid").innerHTML = state.players.map(function(p, i) {
     return playerCardHTML(p, i, true);
@@ -876,39 +884,67 @@ function openPlayerModal(index) {
   }
 }
 
-function renderStatsEditor() {
+function renderStatsEditor(p) {
   var container = document.getElementById("statsEditor");
+  if (!container) return;
 
-  container.innerHTML = statGroups.map(function(group) {
-    return '<div class="stats-group">' +
-      '<h4>' + group.title + '</h4>' +
-      '<div class="form-grid">' +
+  container.innerHTML = statGroups.map(function(group, groupIndex) {
+    var open = groupIndex === 0 ? " open" : "";
+
+    return '<details class="stat-section"' + open + '>' +
+      '<summary>' + group.title + '</summary>' +
+      '<div class="slider-list">' +
       group.stats.map(function(stat) {
         var key = stat[0];
         var label = stat[1];
-        return '<label>' + label + '<input id="' + key + '" type="number" min="1" max="100" /></label>';
+        var value = Number(p[key] || 50);
+
+        return '<div class="slider-row">' +
+          '<label for="' + key + '">' + label + '</label>' +
+          '<input id="' + key + '" type="range" min="1" max="100" value="' + value + '" data-stat-key="' + key + '">' +
+          '<span class="slider-value" id="' + key + 'Value">' + value + '</span>' +
+        '</div>';
       }).join("") +
       '</div>' +
-    '</div>';
+    '</details>';
   }).join("");
+
+  container.querySelectorAll('input[type="range"]').forEach(function(input) {
+    input.addEventListener("input", function() {
+      var valueEl = document.getElementById(input.id + "Value");
+      if (valueEl) valueEl.textContent = input.value;
+      updateModalOverallPreview();
+    });
+  });
+}
+
+function modalPlayerDraft() {
+  var draft = { name: document.getElementById("playerName").value.trim() || "Jugador" };
+
+  statConfig.forEach(function(stat) {
+    var input = document.getElementById(stat[0]);
+    draft[stat[0]] = input ? Number(input.value) : 50;
+  });
+
+  return draft;
+}
+
+function updateModalOverallPreview() {
+  var preview = document.getElementById("playerOverallPreview");
+  if (!preview) return;
+  preview.textContent = overall(modalPlayerDraft()) + " OVR";
 }
 
 function fillModal(p) {
-  renderStatsEditor();
-
   document.getElementById("playerName").value = p.name;
-
-  statConfig.forEach(function(stat) {
-    var key = stat[0];
-    document.getElementById(key).value = p[key] || 50;
-  });
+  renderStatsEditor(p);
+  updateModalOverallPreview();
 
   var preview = document.getElementById("photoPreview");
   preview.dataset.photo = p.photo || "";
   preview.innerHTML = p.photo ? '<img src="' + p.photo + '">' : "📷";
   document.getElementById("playerPhoto").value = "";
 }
-
 function closePlayerModal() {
   document.getElementById("playerModal").classList.add("hidden");
 }
