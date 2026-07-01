@@ -16,12 +16,6 @@
 
     h1 {
       color: #27e36d;
-      margin-bottom: 4px;
-    }
-
-    .subtitle {
-      color: #8f9aaa;
-      margin-bottom: 24px;
     }
 
     .panel {
@@ -32,18 +26,11 @@
       margin-bottom: 20px;
     }
 
-    label {
-      display: block;
-      margin-top: 12px;
-      font-weight: bold;
-      color: #dce5ef;
-    }
-
     input {
       width: 100%;
       max-width: 420px;
       padding: 12px;
-      margin-top: 6px;
+      margin: 6px 0 12px;
       border-radius: 10px;
       border: 1px solid #263241;
       background: #111b27;
@@ -54,18 +41,17 @@
       background: #27e36d;
       color: #031007;
       border: 0;
-      padding: 13px 18px;
-      margin-top: 16px;
+      padding: 12px 18px;
       border-radius: 10px;
       font-weight: bold;
       cursor: pointer;
+      margin-top: 10px;
     }
 
     .players-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
       gap: 14px;
-      margin-top: 16px;
     }
 
     .player-card {
@@ -73,11 +59,6 @@
       border: 1px solid #263241;
       border-radius: 16px;
       padding: 16px;
-    }
-
-    .player-card h3 {
-      margin-top: 0;
-      color: #ffffff;
     }
 
     .overall {
@@ -109,41 +90,24 @@
       background: transparent;
       color: #ff5b5b;
       border: 1px solid #ff5b5b;
-      margin-top: 12px;
     }
   </style>
 </head>
 
 <body>
   <h1>Fútbol 7 Manager</h1>
-  <p class="subtitle">Base de jugadores con aptitudes del 1 al 100</p>
 
   <div class="panel">
     <h2>Agregar jugador</h2>
 
-    <label>Nombre</label>
-    <input id="name" type="text" placeholder="Ej: Flego">
-
-    <label>Técnica</label>
-    <input id="tecnica" type="number" min="1" max="100">
-
-    <label>Pase</label>
-    <input id="pase" type="number" min="1" max="100">
-
-    <label>Definición</label>
-    <input id="definicion" type="number" min="1" max="100">
-
-    <label>Defensa</label>
-    <input id="defensa" type="number" min="1" max="100">
-
-    <label>Estado físico</label>
-    <input id="fisico" type="number" min="1" max="100">
-
-    <label>Inteligencia táctica</label>
-    <input id="inteligencia" type="number" min="1" max="100">
-
-    <label>Compromiso</label>
-    <input id="compromiso" type="number" min="1" max="100">
+    <input id="name" placeholder="Nombre">
+    <input id="tecnica" type="number" placeholder="Técnica">
+    <input id="pase" type="number" placeholder="Pase">
+    <input id="definicion" type="number" placeholder="Definición">
+    <input id="defensa" type="number" placeholder="Defensa">
+    <input id="fisico" type="number" placeholder="Estado físico">
+    <input id="inteligencia" type="number" placeholder="Inteligencia táctica">
+    <input id="compromiso" type="number" placeholder="Compromiso">
 
     <button onclick="addPlayer()">Agregar jugador</button>
   </div>
@@ -154,6 +118,23 @@
   </div>
 
   <script>
+    var defaultPlayers = [
+      { name: "Flego", tecnica: 70, pase: 60, definicion: 80, defensa: 80, fisico: 80, inteligencia: 75, compromiso: 85 },
+      { name: "Gabi", tecnica: 60, pase: 60, definicion: 70, defensa: 80, fisico: 65, inteligencia: 65, compromiso: 85 },
+      { name: "Rodri", tecnica: 80, pase: 70, definicion: 85, defensa: 50, fisico: 60, inteligencia: 65, compromiso: 85 },
+      { name: "Rober", tecnica: 75, pase: 70, definicion: 80, defensa: 80, fisico: 65, inteligencia: 70, compromiso: 85 },
+      { name: "Cabe", tecnica: 65, pase: 65, definicion: 75, defensa: 60, fisico: 55, inteligencia: 60, compromiso: 75 },
+      { name: "Carlitos", tecnica: 70, pase: 70, definicion: 70, defensa: 80, fisico: 85, inteligencia: 65, compromiso: 85 },
+      { name: "Niko", tecnica: 80, pase: 65, definicion: 70, defensa: 60, fisico: 70, inteligencia: 65, compromiso: 70 },
+      { name: "Joni", tecnica: 60, pase: 70, definicion: 80, defensa: 40, fisico: 55, inteligencia: 75, compromiso: 60 },
+      { name: "Nico", tecnica: 80, pase: 65, definicion: 70, defensa: 60, fisico: 75, inteligencia: 70, compromiso: 70 },
+      { name: "Leo 🇮🇹", tecnica: 75, pase: 80, definicion: 85, defensa: 40, fisico: 70, inteligencia: 80, compromiso: 65 },
+      { name: "Tiziano", tecnica: 70, pase: 70, definicion: 70, defensa: 75, fisico: 80, inteligencia: 70, compromiso: 70 },
+      { name: "Facu", tecnica: 80, pase: 60, definicion: 70, defensa: 60, fisico: 60, inteligencia: 60, compromiso: 60 },
+      { name: "Cuchu", tecnica: 50, pase: 65, definicion: 60, defensa: 60, fisico: 50, inteligencia: 50, compromiso: 70 },
+      { name: "Dylan", tecnica: 75, pase: 70, definicion: 70, defensa: 70, fisico: 75, inteligencia: 70, compromiso: 65 }
+    ];
+
     var players = [];
 
     function loadPlayers() {
@@ -161,6 +142,9 @@
 
       if (saved) {
         players = JSON.parse(saved);
+      } else {
+        players = defaultPlayers;
+        savePlayers();
       }
 
       renderPlayers();
@@ -171,7 +155,7 @@
     }
 
     function getValue(id) {
-      return Number(document.getElementById(id).value);
+      return Number(document.getElementById(id).value) || 0;
     }
 
     function addPlayer() {
@@ -182,7 +166,7 @@
         return;
       }
 
-      var player = {
+      players.push({
         name: name,
         tecnica: getValue("tecnica"),
         pase: getValue("pase"),
@@ -191,9 +175,8 @@
         fisico: getValue("fisico"),
         inteligencia: getValue("inteligencia"),
         compromiso: getValue("compromiso")
-      };
+      });
 
-      players.push(player);
       savePlayers();
       clearForm();
       renderPlayers();
@@ -211,16 +194,17 @@
     }
 
     function getOverall(player) {
-      var total =
-        player.tecnica +
-        player.pase +
-        player.definicion +
-        player.defensa +
-        player.fisico +
-        player.inteligencia +
-        player.compromiso;
-
-      return Math.round(total / 7);
+      return Math.round(
+        (
+          player.tecnica +
+          player.pase +
+          player.definicion +
+          player.defensa +
+          player.fisico +
+          player.inteligencia +
+          player.compromiso
+        ) / 7
+      );
     }
 
     function renderPlayers() {
@@ -228,34 +212,32 @@
       container.innerHTML = "";
 
       for (var i = 0; i < players.length; i++) {
-        var player = players[i];
-        var overall = getOverall(player);
+        var p = players[i];
+        var ovr = getOverall(p);
 
         container.innerHTML += `
           <div class="player-card">
-            <h3>${player.name}</h3>
-            <div class="overall">${overall} OVR</div>
-
-            ${renderStat("Técnica", player.tecnica)}
-            ${renderStat("Pase", player.pase)}
-            ${renderStat("Definición", player.definicion)}
-            ${renderStat("Defensa", player.defensa)}
-            ${renderStat("Físico", player.fisico)}
-            ${renderStat("Inteligencia", player.inteligencia)}
-            ${renderStat("Compromiso", player.compromiso)}
-
+            <h3>${p.name}</h3>
+            <div class="overall">${ovr} OVR</div>
+            ${stat("Técnica", p.tecnica)}
+            ${stat("Pase", p.pase)}
+            ${stat("Definición", p.definicion)}
+            ${stat("Defensa", p.defensa)}
+            ${stat("Físico", p.fisico)}
+            ${stat("Inteligencia", p.inteligencia)}
+            ${stat("Compromiso", p.compromiso)}
             <button class="delete" onclick="deletePlayer(${i})">Borrar</button>
           </div>
         `;
       }
     }
 
-    function renderStat(label, value) {
+    function stat(label, value) {
       return `
         <div class="stat">
           ${label}: ${value}
           <div class="bar">
-            <div class="bar-fill" style="width: ${value}%"></div>
+            <div class="bar-fill" style="width:${value}%"></div>
           </div>
         </div>
       `;
