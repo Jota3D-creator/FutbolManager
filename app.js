@@ -1,5 +1,5 @@
 var EDITOR_PASSWORD = "bosteros2026";
-var STORAGE_KEY = "bosteros_manager_data_v19_tecnica_pase_15";
+var STORAGE_KEY = "bosteros_manager_data_v18_card_summary_6";
 
 var defaultPlayers = [
   {
@@ -476,8 +476,8 @@ var summaryConfig = [
     ["control", 0.30],
     ["regate", 0.25],
     ["tecnicaBase", 0.25],
-    ["passing", 0.15],
-    ["agilidad", 0.05]
+    ["passing", 0.10],
+    ["agilidad", 0.10]
   ]],
   ["pase", "Pase", "#4ca8ff", [
     ["passing", 0.40],
