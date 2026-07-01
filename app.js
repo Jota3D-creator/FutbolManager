@@ -1,20 +1,32 @@
-const STORAGE_KEY = "futbol7_manager_v2";
+const STORAGE_KEY = "futbol7_manager_v3";
+
+function uid() {
+  if (window.crypto && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+
+  return "id-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 10);
+}
+
+function clone(value) {
+  return JSON.parse(JSON.stringify(value));
+}
 
 const defaultPlayers = [
-  { id: crypto.randomUUID(), name: "Flego", tecnica: 70, pase: 60, definicion: 80, defensa: 80, fisico: 80, inteligencia: 75, compromiso: 85, photo: "" },
-  { id: crypto.randomUUID(), name: "Gabi", tecnica: 60, pase: 60, definicion: 70, defensa: 80, fisico: 65, inteligencia: 65, compromiso: 85, photo: "" },
-  { id: crypto.randomUUID(), name: "Rodri", tecnica: 80, pase: 70, definicion: 85, defensa: 50, fisico: 60, inteligencia: 65, compromiso: 85, photo: "" },
-  { id: crypto.randomUUID(), name: "Rober", tecnica: 75, pase: 70, definicion: 80, defensa: 80, fisico: 65, inteligencia: 70, compromiso: 85, photo: "" },
-  { id: crypto.randomUUID(), name: "Cabe", tecnica: 65, pase: 65, definicion: 75, defensa: 60, fisico: 55, inteligencia: 60, compromiso: 75, photo: "" },
-  { id: crypto.randomUUID(), name: "Carlitos", tecnica: 70, pase: 70, definicion: 70, defensa: 80, fisico: 85, inteligencia: 65, compromiso: 85, photo: "" },
-  { id: crypto.randomUUID(), name: "Niko", tecnica: 80, pase: 65, definicion: 70, defensa: 60, fisico: 70, inteligencia: 65, compromiso: 70, photo: "" },
-  { id: crypto.randomUUID(), name: "Joni", tecnica: 60, pase: 70, definicion: 80, defensa: 40, fisico: 55, inteligencia: 75, compromiso: 60, photo: "" },
-  { id: crypto.randomUUID(), name: "Nico", tecnica: 80, pase: 65, definicion: 70, defensa: 60, fisico: 75, inteligencia: 70, compromiso: 70, photo: "" },
-  { id: crypto.randomUUID(), name: "Leo 🇮🇹", tecnica: 75, pase: 80, definicion: 85, defensa: 40, fisico: 70, inteligencia: 80, compromiso: 65, photo: "" },
-  { id: crypto.randomUUID(), name: "Tiziano", tecnica: 70, pase: 70, definicion: 70, defensa: 75, fisico: 80, inteligencia: 70, compromiso: 70, photo: "" },
-  { id: crypto.randomUUID(), name: "Facu", tecnica: 80, pase: 60, definicion: 70, defensa: 60, fisico: 60, inteligencia: 60, compromiso: 60, photo: "" },
-  { id: crypto.randomUUID(), name: "Cuchu", tecnica: 50, pase: 65, definicion: 60, defensa: 60, fisico: 50, inteligencia: 50, compromiso: 70, photo: "" },
-  { id: crypto.randomUUID(), name: "Dylan", tecnica: 75, pase: 70, definicion: 70, defensa: 70, fisico: 75, inteligencia: 70, compromiso: 65, photo: "" }
+  { id: uid(), name: "Flego", tecnica: 70, pase: 60, definicion: 80, defensa: 80, fisico: 80, inteligencia: 75, compromiso: 85, photo: "" },
+  { id: uid(), name: "Gabi", tecnica: 60, pase: 60, definicion: 70, defensa: 80, fisico: 65, inteligencia: 65, compromiso: 85, photo: "" },
+  { id: uid(), name: "Rodri", tecnica: 80, pase: 70, definicion: 85, defensa: 50, fisico: 60, inteligencia: 65, compromiso: 85, photo: "" },
+  { id: uid(), name: "Rober", tecnica: 75, pase: 70, definicion: 80, defensa: 80, fisico: 65, inteligencia: 70, compromiso: 85, photo: "" },
+  { id: uid(), name: "Cabe", tecnica: 65, pase: 65, definicion: 75, defensa: 60, fisico: 55, inteligencia: 60, compromiso: 75, photo: "" },
+  { id: uid(), name: "Carlitos", tecnica: 70, pase: 70, definicion: 70, defensa: 80, fisico: 85, inteligencia: 65, compromiso: 85, photo: "" },
+  { id: uid(), name: "Niko", tecnica: 80, pase: 65, definicion: 70, defensa: 60, fisico: 70, inteligencia: 65, compromiso: 70, photo: "" },
+  { id: uid(), name: "Joni", tecnica: 60, pase: 70, definicion: 80, defensa: 40, fisico: 55, inteligencia: 75, compromiso: 60, photo: "" },
+  { id: uid(), name: "Nico", tecnica: 80, pase: 65, definicion: 70, defensa: 60, fisico: 75, inteligencia: 70, compromiso: 70, photo: "" },
+  { id: uid(), name: "Leo 🇮🇹", tecnica: 75, pase: 80, definicion: 85, defensa: 40, fisico: 70, inteligencia: 80, compromiso: 65, photo: "" },
+  { id: uid(), name: "Tiziano", tecnica: 70, pase: 70, definicion: 70, defensa: 75, fisico: 80, inteligencia: 70, compromiso: 70, photo: "" },
+  { id: uid(), name: "Facu", tecnica: 80, pase: 60, definicion: 70, defensa: 60, fisico: 60, inteligencia: 60, compromiso: 60, photo: "" },
+  { id: uid(), name: "Cuchu", tecnica: 50, pase: 65, definicion: 60, defensa: 60, fisico: 50, inteligencia: 50, compromiso: 70, photo: "" },
+  { id: uid(), name: "Dylan", tecnica: 75, pase: 70, definicion: 70, defensa: 70, fisico: 75, inteligencia: 70, compromiso: 65, photo: "" }
 ];
 
 const defaultState = {
@@ -51,18 +63,30 @@ const colorNames = {
 };
 
 function loadState() {
-  const saved = localStorage.getItem(STORAGE_KEY);
-  if (!saved) return structuredClone(defaultState);
+  const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem("futbol7_manager_v2");
+
+  if (!saved) return clone(defaultState);
 
   try {
-    return JSON.parse(saved);
+    const parsed = JSON.parse(saved);
+
+    if (!parsed.players || !parsed.match) {
+      return clone(defaultState);
+    }
+
+    return parsed;
   } catch {
-    return structuredClone(defaultState);
+    return clone(defaultState);
   }
 }
 
 function saveState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch (error) {
+    alert("No se pudo guardar. Puede ser porque las fotos son muy pesadas. Probá con una imagen más chica.");
+    console.error(error);
+  }
 }
 
 function overall(player) {
@@ -243,9 +267,31 @@ function formatDateTime(date, time) {
 
 async function fileToBase64(file) {
   if (!file) return "";
+
   return new Promise(resolve => {
     const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
+
+    reader.onload = event => {
+      const img = new Image();
+
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const maxSize = 420;
+        const scale = Math.min(maxSize / img.width, maxSize / img.height, 1);
+
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        resolve(canvas.toDataURL("image/jpeg", 0.82));
+      };
+
+      img.onerror = () => resolve(event.target.result);
+      img.src = event.target.result;
+    };
+
     reader.readAsDataURL(file);
   });
 }
@@ -258,7 +304,7 @@ document.getElementById("playerForm").addEventListener("submit", async event => 
   const photoFile = document.getElementById("photo").files[0];
 
   const playerData = {
-    id: id || crypto.randomUUID(),
+    id: id || uid(),
     name: document.getElementById("name").value.trim(),
     tecnica: Number(document.getElementById("tecnica").value),
     pase: Number(document.getElementById("pase").value),
@@ -444,3 +490,5 @@ document.getElementById("exportBtn").addEventListener("click", () => {
 });
 
 renderAll();
+
+console.log("Fútbol 7 Manager cargado correctamente.");
