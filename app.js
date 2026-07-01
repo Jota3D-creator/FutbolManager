@@ -1,5 +1,5 @@
 var EDITOR_PASSWORD = "bosteros2026";
-var STORAGE_KEY = "bosteros_manager_data_v11_fix_players";
+var STORAGE_KEY = "bosteros_manager_data_v12_base_players_fixed";
 
 var defaultPlayers = [
   {
@@ -597,7 +597,11 @@ function rolePenaltyForTeam(indexes, candidateIndex) {
 
 
 function cloneDefaultPlayers() {
-  return JSON.parse(JSON.stringify(defaultPlayers));
+  var players = JSON.parse(JSON.stringify(defaultPlayers));
+  players.forEach(function(p) {
+    p.status = "base";
+  });
+  return players;
 }
 
 function hasValidPlayersList(players) {
@@ -747,6 +751,7 @@ function bindEvents() {
   document.getElementById("importDataBtn").addEventListener("click", triggerImportDatabase);
   document.getElementById("importDataInput").addEventListener("change", importDatabaseFromFile);
 
+  document.getElementById("restoreBasePlayersFromMatchBtn").addEventListener("click", restoreDefaultPlayers);
   document.getElementById("selectAllForMatchBtn").addEventListener("click", selectAllForMatch);
   document.getElementById("clearMatchPlayersBtn").addEventListener("click", clearMatchPlayers);
   bindMatchDropZones();
@@ -813,7 +818,8 @@ function renderEditorMode() {
   });
 
   ["matchMode", "matchDay", "matchArrival", "matchStart", "matchPlace", "matchMap", "matchCost", "teamAColor", "teamBColor", "teamCColor"].forEach(function(id) {
-    document.getElementById(id).disabled = !state.isEditor;
+    var el = document.getElementById(id);
+    if (el) el.disabled = !state.isEditor;
   });
 
   renderPlayers();
@@ -966,6 +972,13 @@ function renderPlayers() {
 }
 
 function renderCallList() {
+  if (!hasValidPlayersList(state.players)) {
+    state.players = cloneDefaultPlayers();
+    state.players.forEach(function(p) { p.status = "base"; });
+    state.teams = { a: [], b: [], c: [], positions: {} };
+    saveData();
+  }
+
   var basePlayers = [];
   var matchPlayers = [];
 
@@ -1135,7 +1148,7 @@ function renderTriangularModeUI() {
 
 
 function renderMatchForm() {
-  document.getElementById("matchMode").value = state.match.mode || "normal";
+  if (document.getElementById("matchMode")) document.getElementById("matchMode").value = state.match.mode || "normal";
   document.getElementById("matchDay").value = state.match.day;
   document.getElementById("matchArrival").value = state.match.arrival;
   document.getElementById("matchStart").value = state.match.start;
@@ -1144,14 +1157,14 @@ function renderMatchForm() {
   document.getElementById("matchCost").value = state.match.cost;
   document.getElementById("teamAColor").value = state.match.teamAColor;
   document.getElementById("teamBColor").value = state.match.teamBColor;
-  document.getElementById("teamCColor").value = state.match.teamCColor || "white";
+  if (document.getElementById("teamCColor")) document.getElementById("teamCColor").value = state.match.teamCColor || "white";
   renderTriangularModeUI();
 }
 
 function saveMatchFromForm() {
   if (!state.isEditor) return;
 
-  state.match.mode = document.getElementById("matchMode").value || "normal";
+  state.match.mode = document.getElementById("matchMode") ? document.getElementById("matchMode").value || "normal" : "normal";
   state.match.day = document.getElementById("matchDay").value;
   state.match.arrival = document.getElementById("matchArrival").value;
   state.match.start = document.getElementById("matchStart").value;
@@ -1160,7 +1173,7 @@ function saveMatchFromForm() {
   state.match.cost = Number(document.getElementById("matchCost").value) || 5;
   state.match.teamAColor = document.getElementById("teamAColor").value;
   state.match.teamBColor = document.getElementById("teamBColor").value;
-  state.match.teamCColor = document.getElementById("teamCColor").value || "white";
+  state.match.teamCColor = document.getElementById("teamCColor") ? document.getElementById("teamCColor").value || "white" : "white";
 
   saveData();
   renderDashboard();
@@ -1522,12 +1535,12 @@ function setTeamLabels(labelA, labelB, labelC) {
     el.textContent = labelC || "Equipo C";
   });
 
-  document.getElementById("teamAListTitle").textContent = labelA;
-  document.getElementById("teamBListTitle").textContent = labelB;
-  document.getElementById("teamCListTitle").textContent = labelC || "Equipo C";
-  document.getElementById("teamACompareTitle").textContent = labelA;
-  document.getElementById("teamBCompareTitle").textContent = labelB;
-  document.getElementById("teamCCompareTitle").textContent = labelC || "Equipo C";
+    if (document.getElementById("teamAListTitle")) document.getElementById("teamAListTitle").textContent = labelA;
+    if (document.getElementById("teamBListTitle")) document.getElementById("teamBListTitle").textContent = labelB;
+    if (document.getElementById("teamCListTitle")) document.getElementById("teamCListTitle").textContent = labelC || "Equipo C";
+    if (document.getElementById("teamACompareTitle")) document.getElementById("teamACompareTitle").textContent = labelA;
+    if (document.getElementById("teamBCompareTitle")) document.getElementById("teamBCompareTitle").textContent = labelB;
+    if (document.getElementById("teamCCompareTitle")) document.getElementById("teamCCompareTitle").textContent = labelC || "Equipo C";
 }
 
 function teamStatAverage(indexes, keys) {
@@ -1542,7 +1555,10 @@ function teamStatAverage(indexes, keys) {
 }
 
 function renderTeamCompare(id, indexes) {
-  document.getElementById(id).innerHTML = compareConfig.map(function(item) {
+  var container = document.getElementById(id);
+  if (!container) return;
+
+  container.innerHTML = compareConfig.map(function(item) {
     var label = item[0];
     var keys = item[1];
     var value = teamStatAverage(indexes, keys);
@@ -1653,7 +1669,10 @@ function movePlayerOnPitch(e, pitch, el, shouldSave) {
 }
 
 function renderTeamList(id, indexes) {
-  document.getElementById(id).innerHTML = indexes.map(function(index) {
+  var container = document.getElementById(id);
+  if (!container) return;
+
+  container.innerHTML = indexes.map(function(index) {
     var p = state.players[index];
     return '<div class="team-line"><span>' + p.name + ' <small class="muted">· ' + (positionLabel[p.posicionNatural] || "Polivalente") + '</small></span><strong>' + overall(p) + '</strong></div>';
   }).join("") || '<p class="muted">Todavía no hay equipo generado.</p>';
