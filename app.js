@@ -1,8 +1,9 @@
 var EDITOR_PASSWORD = "bosteros2026";
-var STORAGE_KEY = "bosteros_manager_data_v25_position_weighted_ovr";
+var STORAGE_KEY = "bosteros_manager_data_v26_fix_positional_ovr_live";
 var GOOGLE_SHEET_CONFIG_KEY = "bosteros_google_sheet_id_v24";
 
 var PREVIOUS_STORAGE_KEYS = [
+  "bosteros_manager_data_v25_position_weighted_ovr",
   "bosteros_manager_data_v24_google_sheets",
   "bosteros_manager_data_v23_team_tactics_swap",
   "bosteros_manager_data_v22_fix_render_players",
@@ -643,6 +644,20 @@ var categoryConfig = [
 ];
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 var positionWeightConfig = {
   polivalente: {
     label: "Polivalente",
@@ -724,14 +739,11 @@ var positionWeightConfig = {
   }
 };
 
-function neutralOverall(p) {
-  applyDerivedSummary(p);
-
-  var total = categoryConfig.reduce(function(sum, category) {
-    return sum + categoryValue(p, category);
-  }, 0);
-
-  return Math.round(total / categoryConfig.length);
+function ensureDerivedSummaryForOverall(p) {
+  if (!p) return;
+  if (typeof applyDerivedSummary === "function") {
+    applyDerivedSummary(p);
+  }
 }
 
 function positionWeightsFor(p) {
@@ -739,8 +751,19 @@ function positionWeightsFor(p) {
   return positionWeightConfig[position] || positionWeightConfig.polivalente;
 }
 
+function neutralOverall(p) {
+  ensureDerivedSummaryForOverall(p);
+
+  var keys = ["tecnica", "pase", "tiro", "defensa", "fisico", "vision"];
+  var total = keys.reduce(function(sum, key) {
+    return sum + Number(p[key] || 50);
+  }, 0);
+
+  return Math.round(total / keys.length);
+}
+
 function overallForPosition(p, position) {
-  applyDerivedSummary(p);
+  ensureDerivedSummaryForOverall(p);
 
   var config = positionWeightConfig[position] || positionWeightsFor(p);
   var weights = config.weights;
@@ -748,11 +771,8 @@ function overallForPosition(p, position) {
   var weightTotal = 0;
 
   Object.keys(weights).forEach(function(key) {
-    var value = Number(p[key] || 50);
-    var weight = weights[key];
-
-    total += value * weight;
-    weightTotal += weight;
+    total += Number(p[key] || 50) * weights[key];
+    weightTotal += weights[key];
   });
 
   if (!weightTotal) return neutralOverall(p);
@@ -767,17 +787,17 @@ function overallFormulaText(p) {
   var config = positionWeightsFor(p);
   var weights = config.weights;
 
-  return Object.keys(weights).map(function(key) {
-    var labelMap = {
-      tecnica: "TEC",
-      pase: "PAS",
-      tiro: "TIR",
-      defensa: "DEF",
-      fisico: "FÍS",
-      vision: "VIS",
-      arquero: "ARQ"
-    };
+  var labelMap = {
+    tecnica: "TEC",
+    pase: "PAS",
+    tiro: "TIR",
+    defensa: "DEF",
+    fisico: "FÍS",
+    vision: "VIS",
+    arquero: "ARQ"
+  };
 
+  return Object.keys(weights).map(function(key) {
     return labelMap[key] + " " + Math.round(weights[key] * 100) + "%";
   }).join(" · ");
 }
@@ -1450,13 +1470,7 @@ function categoryValue(p, category) {
   return averageKeys(p, category[1]);
 }
 
-function overall(p) {
-  var total = categoryConfig.reduce(function(sum, category) {
-    return sum + categoryValue(p, category);
-  }, 0);
 
-  return Math.round(total / categoryConfig.length);
-}
 function initials(name) {
   return name.replace("🇮🇹", "").trim().substring(0, 2).toUpperCase();
 }
@@ -1570,6 +1584,25 @@ function updateModalCardPreview() {
   }
 }
 
+
+
+function changeNaturalPosition(index, value) {
+  if (!state.isEditor) return;
+
+  index = Number(index);
+  if (!state.players[index]) return;
+
+  state.players[index].posicionNatural = value || "polivalente";
+  applyDerivedSummary(state.players[index]);
+
+  saveData();
+  setPlayersDirty(false);
+
+  renderDashboard();
+  renderPlayers();
+  renderCallList();
+  renderTeams();
+}
 
 function renderPlayers() {
   ensurePlayersNeverEmpty();
@@ -2461,8 +2494,12 @@ function defaultPositionsForTeams(a, b, c) {
   return positions;
 }
 function teamAverage(indexes) {
-  if (!indexes.length) return 0;
-  var total = indexes.reduce(function(sum, index){ return sum + overall(state.players[index]); }, 0);
+  if (!indexes || !indexes.length) return 0;
+
+  var total = indexes.reduce(function(sum, index) {
+    return sum + overall(state.players[index]);
+  }, 0);
+
   return Math.round(total / indexes.length);
 }
 
