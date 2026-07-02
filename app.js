@@ -1,8 +1,9 @@
 var EDITOR_PASSWORD = "bosteros2026";
-var STORAGE_KEY = "bosteros_manager_data_v24_google_sheets";
+var STORAGE_KEY = "bosteros_manager_data_v25_position_weighted_ovr";
 var GOOGLE_SHEET_CONFIG_KEY = "bosteros_google_sheet_id_v24";
 
 var PREVIOUS_STORAGE_KEYS = [
+  "bosteros_manager_data_v24_google_sheets",
   "bosteros_manager_data_v23_team_tactics_swap",
   "bosteros_manager_data_v22_fix_render_players",
   "bosteros_manager_data_v20_grouped_fine_sliders",
@@ -640,6 +641,147 @@ var categoryConfig = [
   ["Físico", ["fisico"]],
   ["Visión", ["vision"]]
 ];
+
+
+var positionWeightConfig = {
+  polivalente: {
+    label: "Polivalente",
+    weights: {
+      tecnica: 0.18,
+      pase: 0.18,
+      tiro: 0.14,
+      defensa: 0.18,
+      fisico: 0.18,
+      vision: 0.14
+    }
+  },
+  defensa: {
+    label: "Defensa",
+    weights: {
+      defensa: 0.35,
+      fisico: 0.22,
+      vision: 0.13,
+      pase: 0.12,
+      tecnica: 0.10,
+      tiro: 0.08
+    }
+  },
+  lateral: {
+    label: "Lateral",
+    weights: {
+      defensa: 0.25,
+      fisico: 0.22,
+      pase: 0.18,
+      tecnica: 0.15,
+      vision: 0.12,
+      tiro: 0.08
+    }
+  },
+  mediocampo: {
+    label: "Mediocampo",
+    weights: {
+      pase: 0.25,
+      vision: 0.25,
+      tecnica: 0.18,
+      fisico: 0.15,
+      defensa: 0.10,
+      tiro: 0.07
+    }
+  },
+  extremo: {
+    label: "Extremo",
+    weights: {
+      tiro: 0.25,
+      tecnica: 0.23,
+      pase: 0.17,
+      vision: 0.15,
+      fisico: 0.15,
+      defensa: 0.05
+    }
+  },
+  delantero: {
+    label: "Delantero",
+    weights: {
+      tiro: 0.30,
+      tecnica: 0.20,
+      pase: 0.15,
+      vision: 0.15,
+      fisico: 0.15,
+      defensa: 0.05
+    }
+  },
+  arquero: {
+    label: "Arquero",
+    weights: {
+      arquero: 0.40,
+      defensa: 0.20,
+      fisico: 0.18,
+      vision: 0.08,
+      pase: 0.06,
+      tecnica: 0.05,
+      tiro: 0.03
+    }
+  }
+};
+
+function neutralOverall(p) {
+  applyDerivedSummary(p);
+
+  var total = categoryConfig.reduce(function(sum, category) {
+    return sum + categoryValue(p, category);
+  }, 0);
+
+  return Math.round(total / categoryConfig.length);
+}
+
+function positionWeightsFor(p) {
+  var position = displayPosition(p);
+  return positionWeightConfig[position] || positionWeightConfig.polivalente;
+}
+
+function overallForPosition(p, position) {
+  applyDerivedSummary(p);
+
+  var config = positionWeightConfig[position] || positionWeightsFor(p);
+  var weights = config.weights;
+  var total = 0;
+  var weightTotal = 0;
+
+  Object.keys(weights).forEach(function(key) {
+    var value = Number(p[key] || 50);
+    var weight = weights[key];
+
+    total += value * weight;
+    weightTotal += weight;
+  });
+
+  if (!weightTotal) return neutralOverall(p);
+  return Math.round(total / weightTotal);
+}
+
+function overall(p) {
+  return overallForPosition(p, displayPosition(p));
+}
+
+function overallFormulaText(p) {
+  var config = positionWeightsFor(p);
+  var weights = config.weights;
+
+  return Object.keys(weights).map(function(key) {
+    var labelMap = {
+      tecnica: "TEC",
+      pase: "PAS",
+      tiro: "TIR",
+      defensa: "DEF",
+      fisico: "FÍS",
+      vision: "VIS",
+      arquero: "ARQ"
+    };
+
+    return labelMap[key] + " " + Math.round(weights[key] * 100) + "%";
+  }).join(" · ");
+}
+
 
 var playersDirty = false;
 
@@ -1387,7 +1529,7 @@ function playerCardHTML(p, i, editable) {
 
   return '<article class="player-card">' +
     '<div class="player-top">' + avatar(p) +
-    '<div><h4>' + p.name + '</h4><div class="ovr">' + overall(p) + ' OVR</div><span class="position-tag">' + positionText + '</span></div></div>' +
+    '<div><h4>' + p.name + '</h4><div class="ovr">' + overall(p) + ' OVR</div><span class="position-tag">' + positionText + '</span><small class="ovr-note">OVR posicional</small></div></div>' +
     stats +
     '<div class="card-note">Editar stats para ver todos los atributos.</div>' +
     positionEditor +
@@ -1410,7 +1552,7 @@ function modalPlayerPreviewCardHTML(p) {
 
   return '<article class="player-card live-card">' +
     '<div class="player-top">' + avatar(p) +
-    '<div><h4>' + p.name + '</h4><div class="ovr">' + overall(p) + ' OVR</div><span class="position-tag">' + positionText + '</span></div></div>' +
+    '<div><h4>' + p.name + '</h4><div class="ovr">' + overall(p) + ' OVR</div><span class="position-tag">' + positionText + '</span><small class="ovr-note">OVR posicional</small></div></div>' +
     stats +
     '</article>';
 }
@@ -1419,7 +1561,13 @@ function updateModalCardPreview() {
   var container = document.getElementById("modalPlayerCardPreview");
   if (!container) return;
 
-  container.innerHTML = modalPlayerPreviewCardHTML(modalPlayerDraft());
+  var draft = modalPlayerDraft();
+  container.innerHTML = modalPlayerPreviewCardHTML(draft);
+
+  var formula = document.getElementById("modalOverallFormula");
+  if (formula) {
+    formula.innerHTML = '<strong>Fórmula ' + displayPositionLabel(draft) + ':</strong> ' + overallFormulaText(draft);
+  }
 }
 
 

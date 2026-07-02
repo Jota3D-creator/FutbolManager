@@ -1339,3 +1339,30 @@ select option { background: #101926; }
   border-color: rgba(255,83,83,.32);
   color: #ff7777;
 }
+
+
+/* v25 positional OVR */
+.ovr-note {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .3px;
+}
+
+.modal-formula {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.035);
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.modal-formula strong {
+  color: var(--green);
+}
