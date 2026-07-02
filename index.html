@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Los Bosteros · Fútbol 7 Manager</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-ball">⚽</div>
+        <div>
+          <h1>LOS BOSTEROS</h1>
+          <p>Fútbol 7 Manager</p>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <button class="nav-btn active" data-view="dashboard">Dashboard</button>
+        <button class="nav-btn" data-view="players">Jugadores</button>
+        <button class="nav-btn" data-view="match">Partido</button>
+        <button class="nav-btn" data-view="teams">Equipos</button>
+      </nav>
+
+      <div class="editor-box">
+        <span id="editorStatus">Modo visitante</span>
+        <small>Solo lectura</small>
+        <button id="editorBtn">Activar modo editor</button>
+        <button id="logoutEditorBtn" class="hidden ghost-btn">Salir de editor</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <h2 id="viewTitle">Dashboard</h2>
+          <p id="viewSubtitle">Próximo partido, cancha y jugadores.</p>
+        </div>
+        <div class="top-actions">
+          <button class="ghost-btn" id="exportDataBtn">Exportar base</button>
+          <button class="ghost-btn" id="importDataBtn">Importar base</button>
+          <button class="ghost-btn" id="connectSheetBtn">Conectar Sheet</button>
+          <button class="ghost-btn" id="loadSheetBtn">Cargar Sheet</button>
+          <input id="importDataInput" type="file" accept="application/json,.json" class="hidden" />
+          <button class="primary-btn editor-only hidden" id="openPlayerModalBtn">+ Nuevo jugador</button>
+        </div>
+      </header>
+
+      <div id="sheetStatusBar" class="sheet-status-bar">
+        <span id="sheetStatusText">Google Sheet no conectado</span>
+      </div>
+
+      <section id="dashboard" class="view active">
+        <div class="dashboard-grid">
+          <article class="panel hero-card">
+            <span class="kicker">Próximo partido</span>
+            <h3 id="dashDate">Miércoles</h3>
+            <div class="time-row">
+              <div><strong>22:00</strong><small>Llegada</small></div>
+              <div><strong>22:30</strong><small>Inicio</small></div>
+            </div>
+            <p class="place">🏟️ Campo de fútbol Benimàmet CF</p>
+            <a class="map-link" target="_blank" href="https://maps.app.goo.gl/CbSoLSd9j3njXck67">Ver en Google Maps</a>
+            <p class="cost">Costo: <strong>5€</strong> por jugador</p>
+          </article>
+
+          <article class="panel stat-card">
+            <span>Jugadores</span>
+            <strong id="totalPlayers">14</strong>
+            <small>Total en la base</small>
+          </article>
+
+          <article class="panel stat-card">
+            <span>Confirmados</span>
+            <strong id="confirmedCount">0</strong>
+            <small>Listos para jugar</small>
+          </article>
+
+          <article class="panel stat-card warning">
+            <span>No elegidos</span>
+            <strong id="maybeCount">0</strong>
+            <small>Siguen en la base</small>
+          </article>
+
+          <article class="panel stat-card danger">
+            <span>En equipos</span>
+            <strong id="outCount">0</strong>
+            <small>Ya asignados</small>
+          </article>
+
+          <article class="panel money-card">
+            <span>Resumen económico</span>
+            <strong id="moneyTotal">0€</strong>
+            <small id="moneyText">0 jugadores confirmados · 5€ por jugador</small>
+            <button class="primary-btn editor-only hidden" id="quickGenerateBtn">Generar equipos</button>
+          </article>
+        </div>
+
+        <div class="section-head">
+          <div>
+            <h3>Vista rápida de la cancha</h3>
+            <p>Si ya generaste equipos, los vas a ver acá. Si no, queda vacía.</p>
+          </div>
+          <button class="ghost-btn" data-view-target="teams">Ir a equipos</button>
+        </div>
+
+        <div class="pitch-panel panel dashboard-pitch-panel">
+          <div class="team-tabs compact-tabs">
+            <div id="dashboardTeamALabel" class="shirt-tag yellow">Boca amarilla</div>
+            <div id="dashboardTeamBLabel" class="shirt-tag blue">Boca azul</div>
+            <div id="dashboardTeamCLabel" class="shirt-tag white triangular-only hidden">Boca blanca</div>
+          </div>
+          <div class="pitch pitch-dashboard">
+            <div class="half-line"></div>
+            <div class="center-circle"></div>
+            <div class="box left"></div>
+            <div class="box right"></div>
+            <div id="dashboardPitchPlayers"></div>
+          </div>
+        </div>
+
+        <div class="section-head">
+          <div>
+            <h3>Jugadores</h3>
+            <p>Lista rápida del plantel.</p>
+          </div>
+        </div>
+
+        <div id="dashboardPlayers" class="mini-player-grid"></div>
+      </section>
+
+      <section id="players" class="view">
+        <div class="section-head">
+          <div>
+            <h3>Base de jugadores</h3>
+            <p>Stats, fotos y edición del plantel.</p><small id="playersSaveStatus" class="save-status">Cambios guardados localmente</small>
+          </div>
+          <div class="teams-actions editor-only hidden">
+            <button class="ghost-btn" id="savePlayersBtn">Guardar cambios</button>
+            <button class="ghost-btn" id="regenerateFromPlayersBtn">Regenerar equipos</button>
+            <button class="ghost-btn" id="goTeamsFromPlayersBtn">Ver equipos</button>
+            <button class="ghost-btn" id="restoreDefaultPlayersBtn">Restaurar jugadores base</button>
+            <button class="primary-btn" id="openPlayerModalBtn2">+ Nuevo jugador</button>
+          </div>
+        </div>
+        <div id="playersGrid" class="players-grid"></div>
+      </section>
+
+      <section id="match" class="view">
+        <div class="match-layout">
+          <article class="panel">
+            <h3>Datos del partido</h3>
+
+            <div class="form-grid">
+              <label>Tipo de partido
+                <select id="matchMode" disabled>
+                  <option value="normal">Normal, 2 equipos</option>
+                  <option value="triangular">Triangular, 3 equipos</option>
+                </select>
+              </label>
+              <label>Sistema táctico
+                <select id="matchFormation" disabled>
+                  <option value="auto">Auto, recomendar sistema</option>
+                  <option value="1-2-3-1">1-2-3-1, equilibrio</option>
+                  <option value="3-2-1">3-2-1, defensa y contra</option>
+                  <option value="1-2-2-2">1-2-2-2, presión alta</option>
+                </select>
+              </label>
+              <label>Día
+                <input id="matchDay" type="text" value="Miércoles" disabled />
+              </label>
+              <label>Llegada
+                <input id="matchArrival" type="time" value="22:00" disabled />
+              </label>
+              <label>Inicio
+                <input id="matchStart" type="time" value="22:30" disabled />
+              </label>
+              <label>Costo por jugador
+                <input id="matchCost" type="number" value="5" disabled />
+              </label>
+            </div>
+
+            <label>Cancha
+              <input id="matchPlace" type="text" value="Campo de fútbol Benimàmet CF" disabled />
+            </label>
+
+            <label>Mapa
+              <input id="matchMap" type="text" value="https://maps.app.goo.gl/CbSoLSd9j3njXck67" disabled />
+            </label>
+
+            <div class="form-grid">
+              <label>Camiseta Equipo A
+                <select id="teamAColor" disabled>
+                  <option value="yellow">Boca amarilla</option>
+                  <option value="blue">Boca azul</option>
+                  <option value="white">Boca blanca</option>
+                </select>
+              </label>
+              <label>Camiseta Equipo B
+                <select id="teamBColor" disabled>
+                  <option value="blue">Boca azul</option>
+                  <option value="yellow">Boca amarilla</option>
+                  <option value="white">Boca blanca</option>
+                </select>
+              </label>
+              <label id="teamCColorField" class="triangular-only hidden">Camiseta Equipo C
+                <select id="teamCColor" disabled>
+                  <option value="white">Boca blanca</option>
+                  <option value="yellow">Boca amarilla</option>
+                  <option value="blue">Boca azul</option>
+                </select>
+              </label>
+            </div>
+
+            <button class="primary-btn editor-only hidden" id="saveMatchBtn">Guardar datos</button>
+          </article>
+
+          <article class="panel match-builder-panel">
+            <div class="section-head compact-section-head">
+              <div>
+                <h3>Jugadores para partido</h3>
+                <p class="muted">Arrastrá desde la base al partido. También podés usar los botones en celular.</p>
+              </div>
+              <div class="teams-actions editor-only hidden">
+                <button class="ghost-btn" id="restoreBasePlayersFromMatchBtn">Cargar 14 base</button>
+                <button class="ghost-btn" id="selectAllForMatchBtn">Agregar todos</button>
+                <button class="danger-btn" id="clearMatchPlayersBtn">Vaciar partido</button>
+              </div>
+            </div>
+
+            <div class="match-drag-board">
+              <div class="drop-zone" id="basePlayersZone" data-match-zone="base">
+                <div class="drop-zone-head">
+                  <h4>Base de jugadores</h4>
+                  <span id="basePlayersCount">0</span>
+                </div>
+                <div id="basePlayersList" class="match-player-list"></div>
+              </div>
+
+              <div class="drop-zone selected-zone" id="matchPlayersZone" data-match-zone="confirmed">
+                <div class="drop-zone-head">
+                  <h4>Jugadores para partido</h4>
+                  <span id="matchPlayersCount">0</span>
+                </div>
+                <div id="matchPlayersList" class="match-player-list"></div>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section id="teams" class="view">
+        <div class="section-head">
+          <div>
+            <h3>Equipos generados</h3>
+            <p>Podés mover las piezas en la cancha. En modo editor se guardan las posiciones.</p>
+          </div>
+          <div class="teams-actions editor-only hidden">
+            <button class="primary-btn" id="generateTeamsBtn">Generar</button>
+            <button class="ghost-btn" id="regenerateTeamsBtn">Regenerar</button>
+            <button class="danger-btn" id="resetTeamsBtn">Reset</button>
+            <button class="ghost-btn" id="shareTeamsBtn">Compartir</button>
+          </div>
+        </div>
+
+        <div class="teams-summary" id="teamsSummary">
+          <div class="panel small-summary"><span>Equipo A · OVR posicional</span><strong id="teamAAvg">0 OVR</strong></div>
+          <div class="panel small-summary"><span>Equilibrio</span><strong id="balanceScore">0%</strong></div>
+          <div class="panel small-summary"><span>Equipo B · OVR posicional</span><strong id="teamBAvg">0 OVR</strong></div>
+          <div class="panel small-summary triangular-only hidden"><span>Equipo C · OVR posicional</span><strong id="teamCAvg">0 OVR</strong></div>
+        </div>
+
+        <article class="panel tactical-panel" id="tacticalPanel">
+          <div>
+            <h3>Sistema táctico</h3>
+            <p id="formationRecommendation">La app recomienda una formación según los jugadores del partido.</p>
+          </div>
+          <div class="tactical-actions editor-only hidden">
+            <button class="ghost-btn" id="applyRecommendedFormationBtn">Usar recomendada</button>
+          </div>
+        </article>
+
+        <article class="panel team-tactics-panel editor-only hidden" id="teamTacticsPanel">
+          <div class="section-head compact-head">
+            <div>
+              <h3>Táctica por equipo</h3>
+              <p>Color, formación y cambios manuales sin regenerar todo.</p>
+            </div>
+            <button class="ghost-btn" id="applyTeamTacticsBtn">Aplicar cambios</button>
+          </div>
+
+          <div class="team-tactics-grid">
+            <div class="team-tactic-card">
+              <h4>Equipo A</h4>
+              <label>Color
+                <select id="teamAColorTeams">
+                  <option value="yellow">Boca amarilla</option>
+                  <option value="blue">Boca azul</option>
+                  <option value="white">Boca blanca</option>
+                </select>
+              </label>
+              <label>Formación
+                <select id="teamAFormation">
+                  <option value="auto">Auto</option>
+                  <option value="1-2-3-1">1-2-3-1</option>
+                  <option value="3-2-1">3-2-1</option>
+                  <option value="1-2-2-2">1-2-2-2</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="team-tactic-card">
+              <h4>Equipo B</h4>
+              <label>Color
+                <select id="teamBColorTeams">
+                  <option value="yellow">Boca amarilla</option>
+                  <option value="blue">Boca azul</option>
+                  <option value="white">Boca blanca</option>
+                </select>
+              </label>
+              <label>Formación
+                <select id="teamBFormation">
+                  <option value="auto">Auto</option>
+                  <option value="1-2-3-1">1-2-3-1</option>
+                  <option value="3-2-1">3-2-1</option>
+                  <option value="1-2-2-2">1-2-2-2</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="team-tactic-card triangular-only hidden">
+              <h4>Equipo C</h4>
+              <label>Color
+                <select id="teamCColorTeams">
+                  <option value="yellow">Boca amarilla</option>
+                  <option value="blue">Boca azul</option>
+                  <option value="white">Boca blanca</option>
+                </select>
+              </label>
+              <label>Formación
+                <select id="teamCFormation">
+                  <option value="auto">Auto</option>
+                  <option value="1-2-3-1">1-2-3-1</option>
+                  <option value="3-2-1">3-2-1</option>
+                  <option value="1-2-2-2">1-2-2-2</option>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          <div class="swap-panel">
+            <h4>Cambiar jugadores entre equipos</h4>
+            <div class="swap-grid">
+              <label>Jugador
+                <select id="swapPlayerA"></select>
+              </label>
+              <label>por
+                <select id="swapPlayerB"></select>
+              </label>
+              <button class="primary-btn" id="swapPlayersBtn">Intercambiar</button>
+            </div>
+            <small>También podés mover un jugador desde la lista de cada equipo.</small>
+          </div>
+        </article>
+
+        <div class="pitch-panel panel">
+          <div class="team-tabs">
+            <div id="teamALabel" class="shirt-tag yellow">Boca amarilla</div>
+            <div id="teamBLabel" class="shirt-tag blue">Boca azul</div>
+            <div id="teamCLabel" class="shirt-tag white triangular-only hidden">Boca blanca</div>
+          </div>
+
+          <div class="pitch pitch-main" id="mainPitch">
+            <div class="half-line"></div>
+            <div class="center-circle"></div>
+            <div class="box left"></div>
+            <div class="box right"></div>
+            <div id="pitchPlayers"></div>
+          </div>
+        </div>
+
+        <div class="team-comparison" id="teamComparisonGrid">
+          <article class="panel">
+            <h3 id="teamACompareTitle">Equipo A</h3>
+            <div id="teamACompare"></div>
+          </article>
+          <article class="panel">
+            <h3 id="teamBCompareTitle">Equipo B</h3>
+            <div id="teamBCompare"></div>
+          </article>
+          <article class="panel triangular-only hidden">
+            <h3 id="teamCCompareTitle">Equipo C</h3>
+            <div id="teamCCompare"></div>
+          </article>
+        </div>
+
+        <div class="teams-list" id="teamsListGrid">
+          <article class="panel">
+            <h3 id="teamAListTitle">Equipo A</h3>
+            <div id="teamAList"></div>
+          </article>
+          <article class="panel">
+            <h3 id="teamBListTitle">Equipo B</h3>
+            <div id="teamBList"></div>
+          </article>
+          <article class="panel triangular-only hidden">
+            <h3 id="teamCListTitle">Equipo C</h3>
+            <div id="teamCList"></div>
+          </article>
+        </div>
+
+        <article class="panel share-panel hidden" id="sharePanel">
+          <h3>Texto para WhatsApp</h3>
+          <textarea id="shareText" readonly></textarea>
+          <button class="primary-btn" id="copyShareBtn">Copiar texto</button>
+        </article>
+      </section>
+    </main>
+  </div>
+
+  <div id="playerModal" class="modal hidden">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3 id="modalTitle">Nuevo jugador</h3>
+        <button class="icon-btn" id="closePlayerModalBtn">×</button>
+      </div>
+
+      <input id="editingIndex" type="hidden" />
+
+      <div class="modal-body">
+        <div class="photo-picker">
+          <div id="photoPreview" class="photo-preview">📷</div>
+          <label class="upload-btn">
+            Subir foto
+            <input id="playerPhoto" type="file" accept="image/*" />
+          </label>
+          <small>La foto se guarda en este navegador.</small>
+        </div>
+
+        <div class="form-area">
+          <label>Nombre
+            <input id="playerName" type="text" placeholder="Ej: Flego" />
+          </label>
+
+          <label>Posición natural
+            <select id="posicionNatural">
+              <option value="polivalente">Polivalente</option>
+              <option value="arquero">Arquero</option>
+              <option value="defensa">Defensa</option>
+              <option value="lateral">Lateral</option>
+              <option value="mediocampo">Mediocampo</option>
+              <option value="extremo">Extremo</option>
+              <option value="delantero">Delantero</option>
+            </select>
+          </label>
+
+          <div class="modal-overall">
+            <span>OVR posicional</span>
+            <strong id="playerOverallPreview">0 OVR</strong>
+          </div>
+
+          <div class="modal-live-preview">
+            <div class="modal-live-preview-head">
+              <span>Vista previa de la tarjeta</span>
+              <small>Técnica, Pase, Tiro, Defensa, Físico y Visión</small>
+            </div>
+            <div id="modalPlayerCardPreview"></div><div class="modal-formula" id="modalOverallFormula"></div>
+          </div>
+
+          <div id="statsEditor" class="stats-editor"></div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="ghost-btn" id="cancelPlayerBtn">Cancelar</button>
+        <button class="primary-btn" id="savePlayerBtn">Guardar jugador</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
