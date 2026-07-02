@@ -1317,3 +1317,25 @@ select option { background: #101926; }
 .team-line.with-move { display: grid; grid-template-columns: 1fr auto minmax(120px, 160px); gap: 10px; align-items: center; }
 .pitch-player .name-tag { white-space: nowrap; }
 @media (max-width: 900px) { .team-tactics-grid, .swap-grid { grid-template-columns: 1fr; } .team-line.with-move { grid-template-columns: 1fr; } }
+
+
+/* v24 Google Sheets */
+.sheet-status-bar {
+  margin: -8px 0 16px;
+  padding: 10px 14px;
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 14px;
+  background: rgba(255,255,255,.035);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.sheet-status-bar.connected {
+  border-color: rgba(53,232,117,.28);
+  color: var(--green);
+}
+
+.sheet-status-bar.error {
+  border-color: rgba(255,83,83,.32);
+  color: #ff7777;
+}

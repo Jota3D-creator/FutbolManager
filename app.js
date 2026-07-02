@@ -1,7 +1,9 @@
 var EDITOR_PASSWORD = "bosteros2026";
-var STORAGE_KEY = "bosteros_manager_data_v23_team_tactics_swap";
+var STORAGE_KEY = "bosteros_manager_data_v24_google_sheets";
+var GOOGLE_SHEET_CONFIG_KEY = "bosteros_google_sheet_id_v24";
 
 var PREVIOUS_STORAGE_KEYS = [
+  "bosteros_manager_data_v23_team_tactics_swap",
   "bosteros_manager_data_v22_fix_render_players",
   "bosteros_manager_data_v20_grouped_fine_sliders",
   "bosteros_manager_data_v19_tecnica_pase_15",
@@ -1126,6 +1128,8 @@ function bindEvents() {
   bindButtonIfExists("saveMatchBtn", saveMatchFromForm);
   bindButtonIfExists("exportDataBtn", exportDatabase);
   bindButtonIfExists("importDataBtn", triggerImportDatabase);
+  bindButtonIfExists("connectSheetBtn", connectGoogleSheet);
+  bindButtonIfExists("loadSheetBtn", loadFromGoogleSheet);
   bindInputIfExists("importDataInput", "change", importDatabaseFromFile);
 
   bindButtonIfExists("restoreBasePlayersFromMatchBtn", restoreDefaultPlayers);
@@ -1279,6 +1283,7 @@ function setNextWednesdayDate() {
 }
 
 function renderAll() {
+  renderGoogleSheetStatus();
   renderEditorMode();
   renderDashboard();
   renderPlayers();
@@ -2586,6 +2591,333 @@ function copyShareText() {
   }).catch(function() {
     alert("No se pudo copiar automáticamente. Copialo manualmente del cuadro.");
   });
+}
+
+
+
+function setSheetStatus(message, kind) {
+  var bar = document.getElementById("sheetStatusBar");
+  var text = document.getElementById("sheetStatusText");
+  if (!bar || !text) return;
+
+  bar.classList.remove("connected", "error");
+  if (kind) bar.classList.add(kind);
+  text.textContent = message;
+}
+
+function getSavedGoogleSheetId() {
+  return localStorage.getItem(GOOGLE_SHEET_CONFIG_KEY) || "";
+}
+
+function extractGoogleSheetId(input) {
+  input = String(input || "").trim();
+
+  if (!input) return "";
+
+  var match = input.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+  if (match && match[1]) return match[1];
+
+  // If user pasted only the ID
+  if (/^[a-zA-Z0-9-_]{20,}$/.test(input)) return input;
+
+  return "";
+}
+
+function googleSheetCsvUrl(sheetId, sheetName) {
+  return "https://docs.google.com/spreadsheets/d/" + encodeURIComponent(sheetId) +
+    "/gviz/tq?tqx=out:csv&sheet=" + encodeURIComponent(sheetName);
+}
+
+function parseCsv(text) {
+  var rows = [];
+  var row = [];
+  var value = "";
+  var inQuotes = false;
+
+  for (var i = 0; i < text.length; i++) {
+    var char = text[i];
+    var next = text[i + 1];
+
+    if (char === '"' && inQuotes && next === '"') {
+      value += '"';
+      i++;
+      continue;
+    }
+
+    if (char === '"') {
+      inQuotes = !inQuotes;
+      continue;
+    }
+
+    if (char === "," && !inQuotes) {
+      row.push(value);
+      value = "";
+      continue;
+    }
+
+    if ((char === "\n" || char === "\r") && !inQuotes) {
+      if (char === "\r" && next === "\n") i++;
+      row.push(value);
+      rows.push(row);
+      row = [];
+      value = "";
+      continue;
+    }
+
+    value += char;
+  }
+
+  row.push(value);
+  rows.push(row);
+
+  return rows.filter(function(r) {
+    return r.some(function(cell) { return String(cell || "").trim() !== ""; });
+  });
+}
+
+function rowsToObjects(rows) {
+  if (!rows || rows.length < 2) return [];
+
+  var headers = rows[0].map(function(h) {
+    return String(h || "").trim();
+  });
+
+  return rows.slice(1).map(function(row) {
+    var obj = {};
+    headers.forEach(function(header, index) {
+      if (!header) return;
+      obj[header] = row[index] !== undefined ? String(row[index]).trim() : "";
+    });
+    return obj;
+  });
+}
+
+function numberFromSheet(value, fallback) {
+  var n = Number(String(value || "").replace(",", "."));
+  if (!n && n !== 0) return fallback;
+  return Math.max(1, Math.min(100, Math.round(n)));
+}
+
+function normalizeSheetPosition(value) {
+  value = String(value || "").trim().toLowerCase();
+  var map = {
+    "polivalente": "polivalente",
+    "arquero": "arquero",
+    "defensa": "defensa",
+    "lateral": "lateral",
+    "mediocampo": "mediocampo",
+    "medio": "mediocampo",
+    "extremo": "extremo",
+    "delantero": "delantero"
+  };
+
+  return map[value] || "polivalente";
+}
+
+function normalizeSheetStatus(value) {
+  value = String(value || "").trim().toLowerCase();
+  if (value === "confirmed" || value === "confirmado" || value === "partido") return "confirmed";
+  return "base";
+}
+
+function playerFromSheetRow(row, index) {
+  var name = row.name || row.Nombre || row.jugador || row.Jugador || "";
+  if (!name) return null;
+
+  var p = {
+    sheetId: row.player_id || row.id || row.ID || slugifyForSheet(name, index),
+    name: name,
+    photo: row.photo_url || row.photo || row.foto || "",
+    posicionNatural: normalizeSheetPosition(row.position || row.posicionNatural || row.posición || row.Posición),
+    status: normalizeSheetStatus(row.status || row.estado)
+  };
+
+  statConfig.forEach(function(stat) {
+    var key = stat[0];
+    p[key] = numberFromSheet(row[key], 50);
+  });
+
+  applyDerivedSummary(p);
+  return p;
+}
+
+function slugifyForSheet(name, index) {
+  return String(name || ("player-" + index))
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "") || ("player-" + index);
+}
+
+async function fetchSheetObjects(sheetId, sheetName) {
+  var url = googleSheetCsvUrl(sheetId, sheetName);
+  var response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error("No pude leer la pestaña " + sheetName + ". Revisá que el Sheet sea público con permiso de lectura.");
+  }
+
+  var text = await response.text();
+
+  // Google sometimes returns an HTML login/error page.
+  if (text.trim().slice(0, 20).toLowerCase().indexOf("<!doctype") !== -1 || text.trim().slice(0, 10).toLowerCase().indexOf("<html") !== -1) {
+    throw new Error("Google devolvió una página HTML para " + sheetName + ". Compartí el Sheet como 'Cualquier persona con el enlace puede ver'.");
+  }
+
+  return rowsToObjects(parseCsv(text));
+}
+
+function applyMatchRows(rows) {
+  if (!rows || !rows.length) return;
+
+  var data = {};
+  rows.forEach(function(row) {
+    var key = row.key || row.clave || row.setting || "";
+    var value = row.value || row.valor || "";
+    if (key) data[key] = value;
+  });
+
+  state.match.mode = data.mode || state.match.mode || "normal";
+  state.match.date = data.date || state.match.date || "";
+  state.match.day = data.day || state.match.day || "Miércoles";
+  state.match.arrival = data.arrival || state.match.arrival || "22:00";
+  state.match.start = data.start || state.match.start || "22:30";
+  state.match.place = data.place || state.match.place || "Campo de fútbol Benimàmet CF";
+  state.match.map = data.map || state.match.map || "";
+  state.match.cost = data.cost || state.match.cost || "5€";
+  state.match.teamAColor = data.teamAColor || state.match.teamAColor || "yellow";
+  state.match.teamBColor = data.teamBColor || state.match.teamBColor || "blue";
+  state.match.teamCColor = data.teamCColor || state.match.teamCColor || "white";
+  state.match.formation = data.formation || state.match.formation || "auto";
+  state.match.teamAFormation = data.teamAFormation || state.match.teamAFormation || state.match.formation || "auto";
+  state.match.teamBFormation = data.teamBFormation || state.match.teamBFormation || state.match.formation || "auto";
+  state.match.teamCFormation = data.teamCFormation || state.match.teamCFormation || state.match.formation || "auto";
+}
+
+function applyTeamRows(rows, idToIndex) {
+  var validRows = (rows || []).filter(function(row) {
+    return row.team && row.player_id && idToIndex[row.player_id] !== undefined;
+  });
+
+  // If there is no real team table, leave teams empty.
+  if (validRows.length < 2) {
+    state.teams = { a: [], b: [], c: [], positions: {} };
+    return;
+  }
+
+  state.teams = { a: [], b: [], c: [], positions: {} };
+
+  validRows.forEach(function(row) {
+    var team = String(row.team || "").trim().toLowerCase();
+    if (team === "equipo a" || team === "team a" || team === "amarilla" || team === "yellow") team = "a";
+    if (team === "equipo b" || team === "team b" || team === "azul" || team === "blue") team = "b";
+    if (team === "equipo c" || team === "team c" || team === "blanca" || team === "white") team = "c";
+
+    if (!state.teams[team]) return;
+
+    var index = idToIndex[row.player_id];
+    state.teams[team].push(index);
+
+    var x = Number(String(row.x || "").replace(",", "."));
+    var y = Number(String(row.y || "").replace(",", "."));
+
+    if (!isNaN(x) && !isNaN(y)) {
+      state.teams.positions[index] = { x: x, y: y };
+    }
+  });
+
+  if (!Object.keys(state.teams.positions).length) {
+    state.teams.positions = defaultPositionsForTeams(state.teams.a, state.teams.b, state.teams.c);
+  }
+}
+
+async function loadFromGoogleSheet() {
+  var sheetId = getSavedGoogleSheetId();
+
+  if (!sheetId) {
+    connectGoogleSheet();
+    sheetId = getSavedGoogleSheetId();
+    if (!sheetId) return;
+  }
+
+  if (!state.isEditor) {
+    var pass = prompt("Contraseña de editor para cargar desde Google Sheet");
+    if (pass !== EDITOR_PASSWORD) {
+      alert("Contraseña incorrecta");
+      return;
+    }
+    state.isEditor = true;
+    renderEditorMode();
+  }
+
+  setSheetStatus("Cargando Google Sheet...", "connected");
+
+  try {
+    var playerRows = await fetchSheetObjects(sheetId, "Players");
+    var matchRows = await fetchSheetObjects(sheetId, "Match");
+
+    var teamRows = [];
+    try {
+      teamRows = await fetchSheetObjects(sheetId, "Teams");
+    } catch (e) {
+      teamRows = [];
+    }
+
+    var loadedPlayers = playerRows.map(playerFromSheetRow).filter(Boolean);
+
+    if (!loadedPlayers.length) {
+      throw new Error("No encontré jugadores válidos en la pestaña Players.");
+    }
+
+    state.players = loadedPlayers;
+    applyMatchRows(matchRows);
+
+    var idToIndex = {};
+    state.players.forEach(function(p, index) {
+      idToIndex[p.sheetId || slugifyForSheet(p.name, index)] = index;
+    });
+
+    applyTeamRows(teamRows, idToIndex);
+    ensurePlayersNeverEmpty();
+    normalizePlayers();
+    saveData();
+
+    renderAll();
+
+    setSheetStatus("Google Sheet conectado y cargado: " + loadedPlayers.length + " jugadores.", "connected");
+    alert("Base cargada desde Google Sheet.");
+  } catch (error) {
+    console.error(error);
+    setSheetStatus("Error Google Sheet: " + error.message, "error");
+    alert(error.message);
+  }
+}
+
+function connectGoogleSheet() {
+  var current = getSavedGoogleSheetId();
+  var input = prompt("Pegá el link del Google Sheet o solo el ID", current);
+
+  if (input === null) return;
+
+  var id = extractGoogleSheetId(input);
+
+  if (!id) {
+    alert("No pude detectar el ID del Google Sheet. Pegá el link completo o el ID.");
+    return;
+  }
+
+  localStorage.setItem(GOOGLE_SHEET_CONFIG_KEY, id);
+  setSheetStatus("Google Sheet conectado. Tocá Cargar Sheet para traer datos.", "connected");
+}
+
+function renderGoogleSheetStatus() {
+  var id = getSavedGoogleSheetId();
+
+  if (id) {
+    setSheetStatus("Google Sheet conectado. ID: " + id.slice(0, 8) + "…", "connected");
+  } else {
+    setSheetStatus("Google Sheet no conectado", "");
+  }
 }
 
 
