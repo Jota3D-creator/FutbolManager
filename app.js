@@ -1,8 +1,10 @@
 var EDITOR_PASSWORD = "bosteros2026";
-var STORAGE_KEY = "bosteros_manager_data_v26_fix_positional_ovr_live";
+var STORAGE_KEY = "bosteros_manager_data_v27_secondary_position";
 var GOOGLE_SHEET_CONFIG_KEY = "bosteros_google_sheet_id_v24";
 
 var PREVIOUS_STORAGE_KEYS = [
+  "bosteros_manager_data_v26_fix_positional_ovr_live",
+  "bosteros_manager_data_v25_position_weighted_ovr",
   "bosteros_manager_data_v25_position_weighted_ovr",
   "bosteros_manager_data_v24_google_sheets",
   "bosteros_manager_data_v23_team_tactics_swap",
@@ -780,7 +782,14 @@ function overallForPosition(p, position) {
 }
 
 function overall(p) {
-  return overallForPosition(p, displayPosition(p));
+  var primary = displayPosition(p);
+  var secondary = secondaryPosition(p);
+  var primaryOvr = overallForPosition(p, primary);
+
+  if (!secondary) return primaryOvr;
+
+  var secondaryOvr = overallForPosition(p, secondary);
+  return Math.round(primaryOvr * 0.85 + secondaryOvr * 0.15);
 }
 
 function overallFormulaText(p) {
@@ -797,9 +806,15 @@ function overallFormulaText(p) {
     arquero: "ARQ"
   };
 
-  return Object.keys(weights).map(function(key) {
+  var base = Object.keys(weights).map(function(key) {
     return labelMap[key] + " " + Math.round(weights[key] * 100) + "%";
   }).join(" · ");
+
+  if (secondaryPosition(p)) {
+    return base + " · OVR final: 85% " + displayPositionLabel(p) + " + 15% " + secondaryPositionLabel(p);
+  }
+
+  return base;
 }
 
 
@@ -841,6 +856,48 @@ function playerLineRole(p) {
 
   return "medio";
 }
+
+
+function secondaryPosition(p) {
+  if (!p || !p.posicionSecundaria) return "";
+  if (p.posicionSecundaria === displayPosition(p)) return "";
+  return p.posicionSecundaria;
+}
+
+function secondaryPositionLabel(p) {
+  var pos = secondaryPosition(p);
+  if (!pos) return "Sin secundaria";
+  return positionLabel[pos] || "Sin secundaria";
+}
+
+function playerSecondaryLineRole(p) {
+  var pos = secondaryPosition(p);
+
+  if (!pos) return "";
+  if (pos === "arquero") return "arquero";
+  if (pos === "defensa" || pos === "lateral") return "defensa";
+  if (pos === "mediocampo" || pos === "polivalente") return "medio";
+  if (pos === "extremo" || pos === "delantero") return "ataque";
+
+  return "";
+}
+
+function secondaryFlexBonusForTeam(indexes, candidateIndex) {
+  var candidate = state.players[candidateIndex];
+  var secondaryRole = playerSecondaryLineRole(candidate);
+  if (!secondaryRole) return 0;
+
+  var counts = positionScore(indexes || []);
+  var bonus = 0;
+
+  if (secondaryRole === "defensa" && counts.defensa === 0) bonus += 22;
+  if (secondaryRole === "medio" && counts.medio === 0) bonus += 18;
+  if (secondaryRole === "ataque" && counts.ataque === 0) bonus += 18;
+  if (secondaryRole === "arquero" && counts.arquero === 0) bonus += 14;
+
+  return bonus;
+}
+
 
 function countRoles(indexes) {
   var counts = { arquero: 0, defensa: 0, medio: 0, ataque: 0 };
@@ -1011,7 +1068,8 @@ function rolePenaltyForTeam(indexes, candidateIndex) {
   if (candidateRole === "defensa" && counts.defensa > 2) penalty += 14;
   if (candidateRole === "ataque" && counts.ataque > 2) penalty += 14;
 
-  return penalty;
+  penalty -= secondaryFlexBonusForTeam(indexes, candidateIndex);
+  return Math.max(0, penalty);
 }
 
 function cloneDefaultPlayers() {
@@ -1057,6 +1115,7 @@ function ensurePlayersNeverEmpty() {
     if (!p.status) p.status = "base";
     if (!p.photo) p.photo = "";
     if (!p.posicionNatural) p.posicionNatural = "polivalente";
+    if (p.posicionSecundaria === undefined || p.posicionSecundaria === null) p.posicionSecundaria = "";
   });
 
   if (!state.teams) state.teams = { a: [], b: [], c: [], positions: {} };
@@ -1219,6 +1278,7 @@ function normalizePlayers() {
     if (!p.status) p.status = "base";
     if (!p.photo) p.photo = "";
     if (!p.posicionNatural) p.posicionNatural = "polivalente";
+    if (p.posicionSecundaria === undefined || p.posicionSecundaria === null) p.posicionSecundaria = "";
 
     applyDerivedSummary(p);
     return p;
@@ -1532,6 +1592,17 @@ function playerCardHTML(p, i, editable) {
             '<option value="extremo" ' + selected(p.posicionNatural, "extremo") + '>Extremo</option>' +
             '<option value="delantero" ' + selected(p.posicionNatural, "delantero") + '>Delantero</option>' +
           '</select>' +
+        '<label class="secondary-position-label">POSICIÓN SECUNDARIA</label>' +
+        '<select class="position-select secondary-position-select" onchange="changeSecondaryPosition(' + i + ', this.value)">' +
+          '<option value="" ' + selected(p.posicionSecundaria || "", "") + '>Sin secundaria</option>' +
+          '<option value="polivalente" ' + selected(p.posicionSecundaria, "polivalente") + '>Polivalente</option>' +
+          '<option value="arquero" ' + selected(p.posicionSecundaria, "arquero") + '>Arquero</option>' +
+          '<option value="defensa" ' + selected(p.posicionSecundaria, "defensa") + '>Defensa</option>' +
+          '<option value="lateral" ' + selected(p.posicionSecundaria, "lateral") + '>Lateral</option>' +
+          '<option value="mediocampo" ' + selected(p.posicionSecundaria, "mediocampo") + '>Mediocampo</option>' +
+          '<option value="extremo" ' + selected(p.posicionSecundaria, "extremo") + '>Extremo</option>' +
+          '<option value="delantero" ' + selected(p.posicionSecundaria, "delantero") + '>Delantero</option>' +
+        '</select>'  +
         '</label>' +
       '</div>';
   }
@@ -1603,6 +1674,29 @@ function changeNaturalPosition(index, value) {
   renderCallList();
   renderTeams();
 }
+
+function changeSecondaryPosition(index, value) {
+  if (!state.isEditor) return;
+
+  index = Number(index);
+  if (!state.players[index]) return;
+
+  state.players[index].posicionSecundaria = value || "";
+
+  if (state.players[index].posicionSecundaria === state.players[index].posicionNatural) {
+    state.players[index].posicionSecundaria = "";
+  }
+
+  applyDerivedSummary(state.players[index]);
+  saveData();
+  setPlayersDirty(false);
+
+  renderDashboard();
+  renderPlayers();
+  renderCallList();
+  renderTeams();
+}
+
 
 function renderPlayers() {
   ensurePlayersNeverEmpty();
@@ -1939,6 +2033,7 @@ function modalPlayerDraft() {
   var draft = {
     name: document.getElementById("playerName").value.trim() || "Jugador",
     posicionNatural: document.getElementById("posicionNatural") ? document.getElementById("posicionNatural").value || "polivalente" : "polivalente",
+    posicionSecundaria: document.getElementById("posicionSecundaria") ? document.getElementById("posicionSecundaria").value || "" : "",
     photo: document.getElementById("photoPreview") ? document.getElementById("photoPreview").dataset.photo || "" : "",
     status: "base"
   };
@@ -1982,6 +2077,15 @@ function fillModal(p) {
     updateModalCardPreview();
   });
   document.getElementById("posicionNatural").value = p.posicionNatural || "polivalente";
+  if (document.getElementById("posicionSecundaria")) {
+    document.getElementById("posicionSecundaria").value = p.posicionSecundaria || "";
+    document.getElementById("posicionSecundaria").addEventListener("change", function(){
+      setPlayersDirty(true);
+      updateModalOverallPreview();
+      updateCalculatedSummaryPreview();
+      updateModalCardPreview();
+    });
+  }
   document.getElementById("posicionNatural").addEventListener("change", function(){
     setPlayersDirty(true);
     updateModalOverallPreview();
@@ -2054,6 +2158,7 @@ function savePlayerFromModal() {
   var p = {
     name: name,
     posicionNatural: document.getElementById("posicionNatural").value || "polivalente",
+    posicionSecundaria: document.getElementById("posicionSecundaria") ? document.getElementById("posicionSecundaria").value || "" : "",
     photo: document.getElementById("photoPreview").dataset.photo || "",
     status: "base"
   };
@@ -2152,6 +2257,7 @@ function makeTeams(randomize) {
       var score = rawScore(teams[t]) + rolePenaltyForTeam(teams[t], item.index);
 
       score += counts[role] * 24;
+      score -= secondaryFlexBonusForTeam(teams[t], item.index);
       score += teams[t].length * 8;
 
       if (randomize) score += Math.random() * 8;
